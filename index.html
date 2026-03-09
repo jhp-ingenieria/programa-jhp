@@ -416,6 +416,12 @@
         // LÓGICA DE CONEXIÓN A GOOGLE SHEETS (BASE DE DATOS)
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiDyszMC3csF855J9N0bvz8OT5OkPxqN7sIIFVzzcMzg2b568u_D3I9pm7Jc2sVcC7UCjC93UZUvip/pub?gid=0&single=true&output=csv";
 
+        // ¡AQUÍ ESTÁ LA FUNCIÓN RESTAURADA QUE ABRE EL PANEL!
+        function abrirLogin() { 
+            document.getElementById('loginModal').style.display = 'flex'; 
+            document.getElementById('errorMsg').classList.add('hidden');
+        }
+
         async function validarLogin() {
             const uInput = document.getElementById('userInput').value.trim().toLowerCase();
             const pInput = document.getElementById('passInput').value.trim();
@@ -436,7 +442,8 @@
                 if (!response.ok) throw new Error("Error en la conexión");
                 const data = await response.text();
                 
-                const rows = data.split('\n').map(row => row.split(','));
+                // ¡AQUÍ ESTÁ LA SOLUCIÓN DE LA COMA Y EL PUNTO Y COMA!
+                const rows = data.split('\n').map(row => row.split(/,|;/));
                 let accesoConcedido = false;
                 
                 for (let i = 1; i < rows.length; i++) {
