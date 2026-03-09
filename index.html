@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JHP Datum Hospitalario | Ingeniería de Precisión</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; min-height: 100vh; position: relative; }
+        
+        /* CAPAS DE FONDO PREMIUM */
+        .bg-master { position: fixed; inset: 0; z-index: -1; overflow: hidden; background-color: #f8fafc; }
+        .hero-pattern { position: absolute; inset: 0; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 30px 30px; opacity: 0.5; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.15; z-index: -1; }
+
+        .glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05); }
+
+        .tab-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .tab-btn.active { background: #eab308; color: #0f172a; box-shadow: 0 10px 20px -5px rgba(234, 179, 8, 0.4); transform: translateY(-2px); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade { animation: fadeIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+
+        .res-table { width: 100%; border-spacing: 0; border-collapse: separate; border-radius: 1.5rem; overflow: hidden; }
+        .res-table th { background-color: #0f172a; color: #f8fafc; padding: 1.25rem; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.1em; }
+        .res-table td { padding: 1rem; border-bottom: 1px solid #e2e8f0; background: rgba(255,255,255,0.7); font-size: 0.9rem; }
+        .res-table tr:hover td { background-color: #fffde7; }
+        .lectura-roja { color: #e11d48; font-weight: 700; font-family: monospace; font-size: 1.1rem; }
+        .total-row td { background-color: #fef9c3 !important; font-weight: 800; border-top: 2px solid #eab308; }
+
+        #panelProgramas { display: none; }
+        .form-card { display: none; }
+        .form-card.active { display: block; animation: fadeIn 0.5s ease-out; }
+
+        /* REGLAS DE IMPRESIÓN */
+        @media print {
+            body.printing-mode > :not(#print-container) { display: none !important; }
+            body.printing-mode { background-color: #ffffff !important; margin: 0; padding: 0; }
+            #print-container { display: block !important; width: 100%; padding: 20px; }
+            table { page-break-inside: auto; width: 100%; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-master">
+        <div class="hero-pattern"></div>
+        <div class="blob w-[600px] h-[600px] bg-yellow-400 top-[-20%] right-[-10%]"></div>
+        <div class="blob w-[700px] h-[700px] bg-blue-500 bottom-[-20%] left-[-10%]"></div>
+    </div>
+
+    <div id="contenidoPublico">
+        <nav class="sticky top-0 z-50 bg-white/70 backdrop-blur-lg border-b border-slate-200/50 p-4">
+            <div class="container mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="bg-slate-900 p-2.5 rounded-xl shadow-xl"><i class="fas fa-microchip text-yellow-500 text-xl"></i></div>
+                    <h1 class="text-xl md:text-2xl font-black text-slate-800 tracking-tighter uppercase">JHP <span class="text-yellow-500">DATUM HOSPITALARIO</span></h1>
+                </div>
+                <div class="hidden md:flex items-center gap-6">
+                    <button onclick="netlifyIdentity.open('login')" class="bg-slate-900 text-white px-7 py-3 rounded-full hover:bg-slate-800 transition-all font-bold text-xs shadow-xl active:scale-95">ACCESO INGENIEROS</button>
+                </div>
+            </div>
+        </nav>
+        <header class="py-20 px-4 relative overflow-hidden">
+            <div class="container mx-auto text-center max-w-4xl relative z-10">
+                <span class="inline-block bg-slate-200/50 text-slate-600 px-5 py-2 rounded-full text-[10px] font-extrabold uppercase tracking-[0.3em] mb-8 border border-slate-300/50">Precisión Geodésica en Salud</span>
+                <h2 class="text-5xl md:text-7xl font-black text-slate-900 mb-8 leading-tight">Geometría exacta para la <span class="text-yellow-500 italic">salud del mañana</span></h2>
+                <div class="h-2 w-32 bg-yellow-500 mx-auto rounded-full mb-10"></div>
+                <p class="text-slate-500 text-lg font-medium max-w-2xl mx-auto mb-10">Especialistas en datum geodésico y control topográfico para infraestructura hospitalaria de alta complejidad en todo el Perú.</p>
+            </div>
+        </header>
+
+        <section class="pb-24 px-4">
+            <div class="container mx-auto">
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="glass-card rounded-[2.5rem] overflow-hidden text-center hover:-translate-y-2 transition-all duration-500 group shadow-xl">
+                        <div class="h-48 relative overflow-hidden">
+                            <img src="https://i.postimg.cc/crKR0v1w/levantamientos.jpg" alt="Levantamientos Topográficos" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                            <div class="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-transparent"></div>
+                        </div>
+                        <div class="p-8 pt-2">
+                            <h3 class="font-black text-xl mb-3 uppercase italic text-slate-800">Levantamientos</h3>
+                            <p class="text-slate-500 text-sm">Precisión milimétrica en nubes de puntos y cartografía base.</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-[2.5rem] overflow-hidden text-center hover:-translate-y-2 transition-all duration-500 group shadow-xl">
+                        <div class="h-48 relative overflow-hidden">
+                            <img src="https://i.postimg.cc/vc1rb48V/gnss.jpg" alt="Redes GNSS" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                            <div class="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-transparent"></div>
+                        </div>
+                        <div class="p-8 pt-2">
+                            <h3 class="font-black text-xl mb-3 uppercase italic text-slate-800">Redes GNSS</h3>
+                            <p class="text-slate-500 text-sm">Puntos de control geodésico certificados con estricto rigor técnico.</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-[2.5rem] overflow-hidden text-center hover:-translate-y-2 transition-all duration-500 group shadow-xl">
+                        <div class="h-48 relative overflow-hidden">
+                            <img src="https://i.postimg.cc/svBYsMfx/consultoria.jpg" alt="Consultoría en Obras" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                            <div class="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-transparent"></div>
+                        </div>
+                        <div class="p-8 pt-2">
+                            <h3 class="font-black text-xl mb-3 uppercase italic text-slate-800">Consultoría</h3>
+                            <p class="text-slate-500 text-sm">Supervisión experta de trazo y replanteo en obras civiles.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-20 bg-slate-900 rounded-[4rem] mx-4 mb-20 overflow-hidden shadow-2xl relative">
+            <div class="absolute top-0 right-0 p-20 opacity-10"><i class="fas fa-city text-[20rem] text-white"></i></div>
+            <div class="container mx-auto px-8 relative z-10">
+                <div class="mb-16">
+                    <h3 class="text-4xl font-black italic uppercase text-white">Datum en Obra</h3>
+                    <p class="text-yellow-500 font-bold uppercase tracking-[0.3em] text-xs">Ejecución de Proyectos Hospitalarios en Perú</p>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    
+                    <div class="group relative overflow-hidden rounded-[2.5rem] h-80 shadow-2xl bg-slate-800">
+                        <img src="https://i.postimg.cc/Hr2rbmB3/mollendo.jpg" alt="Hospital Mollendo" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition duration-1000 scale-110 group-hover:scale-100">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent p-8 flex flex-col justify-end">
+                            <p class="font-black text-2xl text-white uppercase tracking-tighter italic">PROYECTO</p>
+                            <p class="text-yellow-500 text-[10px] font-bold uppercase tracking-widest">Hospital Alto Inclán - Mollendo</p>
+                        </div>
+                    </div>
+                    
+                    <div class="group relative overflow-hidden rounded-[2.5rem] h-80 shadow-2xl bg-slate-800">
+                        <img src="https://i.postimg.cc/8FzjHY0d/puno.jpg" alt="Hospital Puno" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition duration-1000 scale-110 group-hover:scale-100">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent p-8 flex flex-col justify-end">
+                            <p class="font-black text-2xl text-white uppercase tracking-tighter italic">PROYECTO</p>
+                            <p class="text-yellow-500 text-[10px] font-bold uppercase tracking-widest"> Hospital del Altiplano de EsSalud - Puno</p>
+                        </div>
+                    </div>
+                    
+                    <div class="group relative overflow-hidden rounded-[2.5rem] h-80 shadow-2xl bg-slate-800">
+                        <img src="https://i.postimg.cc/gw2nD7Tq/pampas.jpg" alt="Hospital Pampas" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition duration-1000 scale-110 group-hover:scale-100">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent p-8 flex flex-col justify-end">
+                            <p class="font-black text-2xl text-white uppercase tracking-tighter italic">PROYECTO</p>
+                            <p class="text-yellow-500 text-[10px] font-bold uppercase tracking-widest">Hospital de Pampas - Huancavelica</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="panelProgramas" class="min-h-screen p-4 md:p-8">
+        <div class="max-w-6xl mx-auto">
+            <header class="flex flex-col md:flex-row justify-between items-center gap-6 mb-8 bg-slate-900 p-8 rounded-[3rem] shadow-2xl relative overflow-hidden">
+                <div class="absolute left-0 top-0 w-full h-full opacity-10 pointer-events-none">
+                    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                        <defs><pattern id="dotGrid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.5" fill="#ffffff"/></pattern></defs>
+                        <rect width="100%" height="100%" fill="url(#dotGrid)" />
+                    </svg>
+                </div>
+                <div class="flex items-center gap-5 relative z-10">
+                    <div class="w-16 h-16 bg-yellow-500 rounded-[1.5rem] flex items-center justify-center shadow-2xl rotate-3"><i class="fas fa-calculator text-slate-900 text-2xl"></i></div>
+                    <div>
+                        <h2 class="text-white font-black text-2xl italic uppercase tracking-wider">HERRAMIENTAS DATUM</h2>
+                        <p class="text-yellow-500 text-[10px] font-bold tracking-[0.3em]">Bienvenido, <span id="nombreUsuarioActivo" class="text-white">Ingeniero</span></p>
+                    </div>
+                </div>
+                <div class="flex gap-4 z-10">
+                    <button onclick="netlifyIdentity.logout()" class="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white px-8 py-3 rounded-2xl text-[10px] font-black tracking-[0.2em] transition-all border border-red-500/20 active:scale-95"><i class="fas fa-power-off mr-2"></i> CERRAR SESIÓN</button>
+                </div>
+            </header>
+
+            <div class="flex flex-wrap gap-3 mb-6">
+                <button id="btnCatEdif" class="cat-btn bg-slate-900 text-white px-7 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-95" onclick="switchCategory('cat-edificaciones', 'btnCatEdif')"><i class="fas fa-building mr-2"></i> Edificaciones</button>
+                <button id="btnCatSane" class="cat-btn bg-white text-slate-600 px-7 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all border border-slate-200 active:scale-95" onclick="switchCategory('cat-saneamiento', 'btnCatSane')"><i class="fas fa-water mr-2"></i> Saneamiento</button>
+                <button id="btnCatCarr" class="cat-btn bg-white text-slate-600 px-7 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all border border-slate-200 active:scale-95" onclick="switchCategory('cat-carreteras', 'btnCatCarr')"><i class="fas fa-road mr-2"></i> Carreteras</button>
+                <button id="btnCatLineas" class="cat-btn bg-white text-slate-600 px-7 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all border border-slate-200 active:scale-95" onclick="switchCategory('cat-lineas', 'btnCatLineas')"><i class="fas fa-bolt mr-2"></i> Líneas de Tensión</button>
+            </div>
+
+            <div id="cat-edificaciones" class="category-panel block animate-fade">
+                <div class="flex flex-wrap gap-4 mb-8 bg-slate-200/40 p-3 rounded-[2rem] w-fit backdrop-blur-md">
+                    <button id="btnTabPend" class="tab-btn active px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest" onclick="switchTab('pend', 'btnTabPend')">PENDIENTES</button>
+                    <button id="btnTabPasos" class="tab-btn px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-500" onclick="switchTab('pasos', 'btnTabPasos')">ESCALERAS</button>
+                    <button id="btnTabCotas" class="tab-btn px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-500" onclick="switchTab('cotas', 'btnTabCotas')">COTAS</button>
+                </div>
+
+                <div id="pend" class="form-card active glass-card rounded-[3rem] p-8 md:p-12 shadow-2xl">
+                    <div class="grid lg:grid-cols-3 gap-12">
+                        <div class="lg:col-span-1 space-y-6">
+                            <h3 class="text-2xl font-black text-slate-800 italic border-l-4 border-yellow-500 pl-5 uppercase mb-4">Parámetros</h3>
+                            <div class="space-y-5">
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Cota Instrumento (m)</label><input type="number" id="p_cotaInst" step="0.001" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-yellow-500/20 outline-none font-bold" placeholder="0.000"></div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Cota Inicio</label><input type="number" id="p_cotaIni" step="0.001" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none" placeholder="0.000"></div>
+                                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Cota Fin</label><input type="number" id="p_cotaFin" step="0.001" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none" placeholder="0.000"></div>
+                                </div>
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Distancia Total (m)</label><input type="number" id="p_distTotal" step="0.01" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none" placeholder="0.00"></div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Offset</label><input type="number" id="p_offset" value="0.50" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none"></div>
+                                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Interv.</label><input type="number" id="p_inter" value="3.00" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none"></div>
+                                </div>
+                            </div>
+                            <button onclick="calcularPendientes()" class="w-full bg-slate-900 text-yellow-500 py-6 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95"><i class="fas fa-sync-alt"></i> GENERAR TABLA</button>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <div id="imprimir-pendientes" class="hidden bg-white p-6 rounded-[2rem]">
+                                <h2 class="text-xl font-black text-slate-800 uppercase italic mb-4 text-center border-b pb-2 hidden print:block">Reporte de Pendientes - JHP Datum</h2>
+                                <div id="resumen-p" class="mb-8 p-8 bg-yellow-50 rounded-[2.5rem] border border-yellow-100 flex justify-around items-center animate-fade">
+                                    <div class="text-center"><p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Desnivel</p><p class="text-4xl font-black text-slate-800"><span id="info-desnivel"></span><span class="text-sm ml-1 text-slate-400">m</span></p></div>
+                                    <div class="text-center"><p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Gradiente</p><p class="text-4xl font-black text-red-600"><span id="info-pendiente"></span><span class="text-sm ml-1">%</span></p></div>
+                                </div>
+                                <div class="overflow-x-auto rounded-[2rem] border border-slate-100 mb-8" id="res-pendientes"></div>
+                                <canvas id="grafico-pendientes" width="800" height="350" class="w-full bg-slate-50 rounded-[2rem] border border-slate-200 shadow-inner hidden animate-fade"></canvas>
+                            </div>
+                            <button id="btn-pdf-pend" onclick="descargarPDF('imprimir-pendientes')" class="hidden mt-6 w-full bg-red-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95"><i class="fas fa-file-pdf text-xl"></i> DESCARGAR PDF</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="pasos" class="form-card glass-card rounded-[3rem] p-8 md:p-12 shadow-2xl">
+                    <div class="max-w-3xl mx-auto">
+                        <h3 class="text-3xl font-black text-slate-800 italic border-l-4 border-blue-500 pl-6 uppercase mb-10 text-center">Cálculo de Escaleras</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                            <input type="number" id="cotaEst" placeholder="Cota Instrumento" class="w-full p-6 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 font-bold outline-none focus:ring-4 focus:ring-blue-500/20">
+                            <input type="number" id="cotaInf" placeholder="Cota Baja" class="w-full p-6 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 font-bold outline-none focus:ring-4 focus:ring-blue-500/20">
+                            <input type="number" id="cotaSup" placeholder="Cota Alta" class="w-full p-6 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 font-bold outline-none focus:ring-4 focus:ring-blue-500/20">
+                            <input type="number" id="pasos_n" placeholder="Número de Pasos" class="w-full p-6 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 font-bold outline-none focus:ring-4 focus:ring-blue-500/20">
+                        </div>
+                        <button onclick="calcularPasosJHP()" class="w-full bg-blue-600 text-white py-7 rounded-[2rem] font-black uppercase tracking-[0.2em] hover:bg-blue-700 transition-all shadow-2xl mb-12 active:scale-95">CALCULAR LIBRETA</button>
+                        <div id="imprimir-pasos" class="hidden bg-white p-6 rounded-[2rem]">
+                            <h2 class="text-xl font-black text-slate-800 uppercase italic mb-4 text-center border-b pb-2 hidden print:block">Reporte Nivelación Escaleras - JHP Datum</h2>
+                            <div id="resultado-pasos" class="animate-fade"></div>
+                        </div>
+                        <button id="btn-pdf-pasos" onclick="descargarPDF('imprimir-pasos')" class="hidden mt-6 w-full bg-red-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95"><i class="fas fa-file-pdf text-xl"></i> DESCARGAR PDF</button>
+                    </div>
+                </div>
+
+                <div id="cotas" class="form-card glass-card rounded-[3rem] p-8 md:p-12 shadow-2xl">
+                    <div class="grid lg:grid-cols-3 gap-12">
+                        <div class="lg:col-span-1 space-y-6">
+                            <h3 class="text-2xl font-black text-slate-800 italic border-l-4 border-emerald-500 pl-5 uppercase mb-4">Cálculo de Cotas</h3>
+                            <div class="space-y-5">
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Cota de Referencia (m)</label><input type="number" id="c_cotaInicial" step="any" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-emerald-500/20 outline-none font-bold" placeholder="0.000"></div>
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Distancia Horizontal (m)</label><input type="number" id="c_distancia" step="any" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-emerald-500/20 outline-none font-bold" placeholder="0.00"></div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Pendiente (%)</label><input type="number" id="c_pendiente" step="any" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-emerald-500/20 outline-none font-bold" placeholder="0.00"></div>
+                                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Sentido</label><select id="c_sentido" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-emerald-500/20 outline-none font-bold text-slate-700 cursor-pointer appearance-none"><option value="positivo">Subida (+)</option><option value="negativo">Bajada (-)</option></select></div>
+                                </div>
+                            </div>
+                            <button onclick="calcularCotaJHP()" class="w-full bg-emerald-600 text-white py-6 rounded-2xl font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95"><i class="fas fa-mountain"></i> CALCULAR COTA FINAL</button>
+                        </div>
+                        <div class="lg:col-span-2 flex flex-col justify-center">
+                            <div id="resumen-c" class="hidden w-full p-10 bg-emerald-50 rounded-[3rem] border border-emerald-100 flex-col md:flex-row justify-around items-center animate-fade shadow-inner">
+                                <div class="text-center mb-6 md:mb-0"><p class="text-[12px] font-black text-emerald-500 uppercase mb-2 tracking-widest">Desnivel (ΔH)</p><p class="text-5xl font-black text-slate-800"><span id="info-desnivel-c">0.000</span><span class="text-xl ml-2 text-slate-400">m</span></p></div>
+                                <div class="h-16 w-px bg-emerald-200 hidden md:block"></div>
+                                <div class="text-center"><p class="text-[12px] font-black text-emerald-500 uppercase mb-2 tracking-widest">Cota Final</p><p class="text-5xl font-black text-emerald-600"><span id="info-cotafinal-c">0.000</span></p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> <div id="cat-saneamiento" class="category-panel hidden animate-fade">
+                <div class="flex flex-wrap gap-4 mb-8 bg-slate-200/40 p-3 rounded-[2rem] w-fit backdrop-blur-md">
+                    <button id="btnTabTub" class="tab-btn active px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest" onclick="switchTab('tub', 'btnTabTub')">TUBERÍAS</button>
+                </div>
+
+                <div id="tub" class="form-card active glass-card rounded-[3rem] p-8 md:p-12 shadow-2xl">
+                    <div class="grid lg:grid-cols-3 gap-12">
+                        <div class="lg:col-span-1 space-y-6">
+                            <h3 class="text-2xl font-black text-slate-800 italic border-l-4 border-indigo-500 pl-5 uppercase mb-4">Control Hidráulico</h3>
+                            <div class="space-y-5">
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Cota Instrumento (m)</label><input type="number" id="t_cotaInst" step="0.001" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none focus:ring-4 focus:ring-indigo-500/10" placeholder="0.000"></div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Cota Inicio</label><input type="number" id="t_cotaIni" step="0.001" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none" placeholder="0.000"></div>
+                                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Cota Fin</label><input type="number" id="t_cotaFin" step="0.001" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none" placeholder="0.000"></div>
+                                </div>
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Distancia Total (m)</label><input type="number" id="t_distTotal" step="0.01" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none" placeholder="0.00"></div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Offset</label><input type="number" id="t_offset" value="0.50" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none"></div>
+                                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Interv.</label><input type="number" id="t_inter" value="3.00" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none"></div>
+                                </div>
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Diámetro Tubería (m)</label><input type="number" id="t_diametro" step="0.001" value="0.200" class="w-full p-5 bg-indigo-50 rounded-2xl border border-indigo-200 focus:ring-4 focus:ring-indigo-500/20 transition-all font-bold text-indigo-900" placeholder="Ej. 0.200"></div>
+                            </div>
+                            <button onclick="calcularTuberias()" class="w-full bg-indigo-600 text-white py-6 rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95"><i class="fas fa-water"></i> CALCULAR TUBERÍA</button>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <div id="imprimir-tuberias" class="hidden bg-white p-6 rounded-[2rem]">
+                                <h2 class="text-xl font-black text-slate-800 uppercase italic mb-4 text-center border-b pb-2 hidden print:block">Control Hidráulico Tuberías - JHP Datum</h2>
+                                <div id="resumen-t" class="mb-8 p-8 bg-indigo-50 rounded-[2.5rem] border border-indigo-100 flex justify-around items-center animate-fade">
+                                    <div class="text-center"><p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Desnivel Solera</p><p class="text-4xl font-black text-slate-800"><span id="info-desnivel-t"></span><span class="text-sm ml-1 text-slate-400">m</span></p></div>
+                                    <div class="text-center"><p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Pendiente</p><p class="text-4xl font-black text-indigo-600"><span id="info-pendiente-t"></span><span class="text-sm ml-1">%</span></p></div>
+                                </div>
+                                <div class="overflow-x-auto rounded-[2rem] border border-slate-100 mb-8" id="res-tuberias"></div>
+                                <canvas id="grafico-tuberias" width="800" height="350" class="w-full bg-slate-50 rounded-[2rem] border border-slate-200 shadow-inner hidden animate-fade"></canvas>
+                            </div>
+                            <button id="btn-pdf-tub" onclick="descargarPDF('imprimir-tuberias')" class="hidden mt-6 w-full bg-red-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95"><i class="fas fa-file-pdf text-xl"></i> DESCARGAR PDF</button>
+                        </div>
+                    </div>
+                </div>
+            </div> <div id="cat-carreteras" class="category-panel hidden animate-fade">
+                <div class="flex flex-wrap gap-4 mb-8 bg-slate-200/40 p-3 rounded-[2rem] w-fit backdrop-blur-md">
+                    <button id="btnTabDg" class="tab-btn active px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest" onclick="switchTab('dg2018', 'btnTabDg')">DG-2018</button>
+                    <button id="btnTabCurvas" class="tab-btn px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-500" onclick="switchTab('curvas', 'btnTabCurvas')">CURVAS VERTICALES</button>
+                </div>
+                
+                <div id="dg2018" class="form-card active glass-card rounded-[3rem] p-8 md:p-12 shadow-2xl">
+                    <div class="mb-10 text-center">
+                        <h3 class="text-3xl font-black text-slate-800 italic uppercase mb-2">Diseñador Vial DG-2018</h3>
+                        <p class="text-slate-500 font-medium">Flujo completo de diseño según normativa peruana vigente.</p>
+                    </div>
+                    <div class="grid lg:grid-cols-3 gap-8">
+                        <div class="glass-card p-6 rounded-[2rem] shadow-sm border border-slate-100 bg-white/50 flex flex-col">
+                            <h4 class="text-lg font-black text-slate-800 italic border-l-4 border-orange-500 pl-3 uppercase mb-4">1. Clasificación</h4>
+                            <div class="space-y-4 mb-6 flex-1">
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">IMDA (Vehículos/día)</label><input type="number" id="dg_imda" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold" placeholder="Ej: 1200"></div>
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Orografía del Terreno</label><select id="dg_oro" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold text-slate-700 cursor-pointer appearance-none"><option value="1">Tipo 1 (Plano < 10%)</option><option value="2">Tipo 2 (Ondulado 11-50%)</option><option value="3">Tipo 3 (Accidentado 51-100%)</option><option value="4">Tipo 4 (Escarpado > 100%)</option></select></div>
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Velocidad Diseño (km/h)</label><input type="number" id="dg_v_dis" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold" placeholder="Ej: 40, 60, 80"></div>
+                            </div>
+                            <button onclick="disenoFase1()" class="w-full bg-orange-500 text-white py-4 rounded-xl font-black uppercase tracking-widest hover:bg-orange-600 transition-all shadow-md active:scale-95 mt-auto">Calcular F1</button>
+                            <div id="res_fase1" class="hidden mt-4 p-4 bg-orange-50 rounded-xl border border-orange-100 text-sm text-slate-700 font-medium animate-fade"></div>
+                        </div>
+
+                        <div class="glass-card p-6 rounded-[2rem] shadow-sm border border-slate-100 bg-white/50 flex flex-col">
+                            <h4 class="text-lg font-black text-slate-800 italic border-l-4 border-orange-500 pl-3 uppercase mb-4">2. Horizontal</h4>
+                            <div class="space-y-4 mb-6 flex-1">
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Ubicación de la vía</label><select id="dg_ubicacion" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold text-slate-700 cursor-pointer appearance-none"><option value="0.08">Rural (Plano/Ondulado) e_max=8%</option><option value="0.12">Rural (Accident/Escarp) e_max=12%</option><option value="0.06">Urbano / Hielo e_max=6%</option></select></div>
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Vehículo de Diseño</label><select id="dg_vehiculo" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold text-slate-700 cursor-pointer appearance-none"><option value="6.55">C2/B2 (Ligero L=6.55m)</option><option value="10.50">B3-1 (Bus 3 ejes L=10.50m)</option><option value="12.19">WB-12 (Semirremolque L=12.19m)</option></select></div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Radio (m)</label><input type="number" id="dg_radio_p" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold" placeholder="Ej: 50"></div>
+                                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Pendiente (%)</label><input type="number" id="dg_pend_v" value="0" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold"></div>
+                                </div>
+                            </div>
+                            <button onclick="disenoFase2()" class="w-full bg-orange-500 text-white py-4 rounded-xl font-black uppercase tracking-widest hover:bg-orange-600 transition-all shadow-md active:scale-95 mt-auto">Calcular F2</button>
+                            <div id="res_fase2" class="hidden mt-4 p-4 bg-orange-50 rounded-xl border border-orange-100 text-sm text-slate-700 font-medium animate-fade"></div>
+                        </div>
+
+                        <div class="glass-card p-6 rounded-[2rem] shadow-sm border border-slate-100 bg-white/50 flex flex-col">
+                            <h4 class="text-lg font-black text-slate-800 italic border-l-4 border-orange-500 pl-3 uppercase mb-4">3. Vertical & Drenaje</h4>
+                            <div class="space-y-4 mb-6 flex-1">
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Dif. Algebraica A (%)</label><input type="number" id="dg_dif_a" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold" placeholder="Ej: 6"></div>
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Tipo Curva Vertical</label><select id="dg_tipo_v" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold text-slate-700 cursor-pointer appearance-none"><option value="cresta">Convexa (Cresta)</option><option value="columpio">Cóncava (Columpio)</option></select></div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Suelo Corte</label><select id="dg_mat_talud" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold text-[10px] cursor-pointer appearance-none"><option value="roca">Roca</option><option value="suelo">Común</option></select></div>
+                                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">H Talud (m)</label><input type="number" id="dg_h_talud" value="5" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold"></div>
+                                </div>
+                            </div>
+                            <button onclick="disenoFase3()" class="w-full bg-orange-500 text-white py-4 rounded-xl font-black uppercase tracking-widest hover:bg-orange-600 transition-all shadow-md active:scale-95 mt-auto">Calcular F3</button>
+                            <div id="res_fase3" class="hidden mt-4 p-4 bg-orange-50 rounded-xl border border-orange-100 text-sm text-slate-700 font-medium animate-fade"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="curvas" class="form-card glass-card rounded-[3rem] p-8 md:p-12 shadow-2xl">
+                    <div class="mb-10 text-center">
+                        <h3 class="text-3xl font-black text-slate-800 italic uppercase mb-2 border-b-4 border-orange-500 inline-block pb-1">Curva Vertical Parabólica</h3>
+                        <p class="text-slate-500 font-medium mt-2">Cálculo de Rasante y Exportación de Cartera.</p>
+                    </div>
+
+                    <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">V. Diseño (km/h)</label><select id="cv_velocidad" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold text-slate-700 cursor-pointer appearance-none"><option value="40">40</option><option value="60" selected>60</option><option value="80">80</option><option value="100">100</option></select></div>
+                        <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Abscisa PIV (m)</label><input type="number" id="cv_piv_abs" value="1000" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold"></div>
+                        <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Cota PIV (m)</label><input type="number" id="cv_piv_cota" value="2500" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold"></div>
+                        <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Longitud L (m)</label><input type="number" id="cv_L" value="100" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold"></div>
+                        <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Entrada g1 (%)</label><input type="number" id="cv_g1" value="4.0" step="0.1" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold"></div>
+                        <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Salida g2 (%)</label><input type="number" id="cv_g2" value="-2.0" step="0.1" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold"></div>
+                        <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Intervalo (m)</label><input type="number" id="cv_intervalo" value="10" class="w-full p-4 bg-white rounded-xl border border-slate-200 focus:ring-4 focus:ring-orange-500/20 outline-none font-bold"></div>
+                        <div class="col-span-full mt-2">
+                            <button onclick="procesarTodoCV()" class="w-full bg-slate-900 text-orange-500 py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl active:scale-95"><i class="fas fa-calculator mr-2"></i> Procesar Diseño y Cartera</button>
+                        </div>
+                    </div>
+
+                    <div id="alerta-cv" class="hidden p-5 rounded-2xl font-bold mt-6 text-center border animate-fade"></div>
+
+                    <div class="w-full bg-white p-4 rounded-[2rem] shadow-inner mt-8 border border-slate-100 relative h-80 hidden animate-fade" id="contenedorGraficoCV">
+                        <canvas id="graficoCurva"></canvas>
+                    </div>
+
+                    <div id="seccionTablaCV" class="hidden mt-8 animate-fade">
+                        <button onclick="descargarCSV()" class="mb-4 bg-green-600 text-white px-6 py-3 rounded-xl font-bold uppercase text-xs tracking-widest shadow-md hover:bg-green-700 transition-all"><i class="fas fa-file-csv mr-2"></i> Exportar a Excel (CSV)</button>
+                        <div class="overflow-x-auto rounded-[2rem] border border-slate-100">
+                            <table class="res-table w-full">
+                                <thead><tr><th>Punto</th><th>Abscisa (K)</th><th>Dist. x (m)</th><th>Cota Tangente</th><th>Corrección (y)</th><th>Cota Rasante</th></tr></thead>
+                                <tbody id="cuerpoTablaCV"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div> <div id="cat-lineas" class="category-panel hidden animate-fade">
+                <div class="glass-card rounded-[3rem] p-16 shadow-xl text-center flex flex-col items-center justify-center border-dashed border-2 border-slate-300">
+                    <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-6"><i class="fas fa-bolt text-4xl text-slate-400"></i></div>
+                    <h3 class="text-3xl font-black text-slate-800 uppercase italic mb-2">Módulo en Desarrollo</h3>
+                    <p class="text-slate-500 max-w-md">El software para catenarias y flechas de tendido eléctrico se encuentra en fase de pruebas.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        netlifyIdentity.on('init', user => { if (user) { mostrarPanel(user); } });
+        netlifyIdentity.on('login', user => { mostrarPanel(user); netlifyIdentity.close(); });
+        netlifyIdentity.on('logout', () => { document.getElementById('contenidoPublico').style.display = 'block'; document.getElementById('panelProgramas').style.display = 'none'; window.scrollTo(0,0); });
+
+        function mostrarPanel(user) {
+            document.getElementById('contenidoPublico').style.display = 'none';
+            document.getElementById('panelProgramas').style.display = 'block';
+            let nombreMostrar = user.user_metadata?.full_name || user.email.split('@')[0];
+            document.getElementById('nombreUsuarioActivo').innerText = nombreMostrar;
+            window.scrollTo(0,0);
+        }
+    </script>
+
+    <script>
+        // NAVEGACIÓN
+        function switchCategory(catId, btnId) {
+            document.querySelectorAll('.category-panel').forEach(c => { c.classList.add('hidden'); c.classList.remove('block'); });
+            document.querySelectorAll('.cat-btn').forEach(b => { b.classList.remove('bg-slate-900', 'text-white', 'shadow-lg', 'border-transparent'); b.classList.add('bg-white', 'text-slate-600', 'shadow-sm', 'border-slate-200'); });
+            document.getElementById(catId).classList.remove('hidden'); document.getElementById(catId).classList.add('block');
+            const activeBtn = document.getElementById(btnId); activeBtn.classList.remove('bg-white', 'text-slate-600', 'shadow-sm', 'border-slate-200'); activeBtn.classList.add('bg-slate-900', 'text-white', 'shadow-lg', 'border-transparent');
+            if(catId === 'cat-edificaciones') switchTab('pend', 'btnTabPend');
+            if(catId === 'cat-saneamiento') switchTab('tub', 'btnTabTub');
+            if(catId === 'cat-carreteras') switchTab('dg2018', 'btnTabDg');
+        }
+
+        function switchTab(tabId, btnId) {
+            document.querySelectorAll('.form-card').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active', 'text-slate-900', 'bg-yellow-500'); b.classList.add('text-slate-500'); });
+            document.getElementById(tabId).classList.add('active');
+            const activeBtn = document.getElementById(btnId); activeBtn.classList.add('active'); activeBtn.classList.remove('text-slate-500');
+        }
+
+        // DESCARGA PDF
+        function descargarPDF(idContenedor) {
+            const elementoOriginal = document.getElementById(idContenedor);
+            let printContainer = document.getElementById('print-container');
+            if (!printContainer) { printContainer = document.createElement('div'); printContainer.id = 'print-container'; document.body.appendChild(printContainer); }
+            printContainer.innerHTML = elementoOriginal.innerHTML;
+            const canvasOriginal = elementoOriginal.querySelector('canvas');
+            if (canvasOriginal && !canvasOriginal.classList.contains('hidden')) { const img = new Image(); img.src = canvasOriginal.toDataURL("image/png"); img.className = canvasOriginal.className; img.style.width = "100%"; img.style.height = "auto"; const canvasClonado = printContainer.querySelector('canvas'); canvasClonado.parentNode.replaceChild(img, canvasClonado); }
+            document.body.classList.add('printing-mode'); window.print(); document.body.classList.remove('printing-mode'); printContainer.innerHTML = '';
+        }
+
+        // MOTOR GRÁFICO COMPARTIDO
+        const configGrafico = { mLeft: 70, mRight: 60, mTop: 50, mBottom: 75, fVisual: "bold 10px Inter", fDist: "600 9px Inter", fLect: "bold 9px monospace", cSuelo: "#0f172a", cVisual: "#ef4444", cEquipo: "#eab308" };
+        function dibujarBaseTopografica(ctx, ci, vMin, vRange, getX, getY, W, canvasW) { ctx.beginPath(); ctx.moveTo(configGrafico.mLeft - 30, getY(ci)); ctx.lineTo(canvasW - configGrafico.mRight + 30, getY(ci)); ctx.strokeStyle = configGrafico.cVisual; ctx.lineWidth = 1.2; ctx.setLineDash([8, 5]); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = configGrafico.cVisual; ctx.font = configGrafico.fVisual; ctx.fillText("Visual: " + ci.toFixed(3), configGrafico.mLeft + 5, getY(ci) - 8); const instX = getX(0) - 25; const instY = getY(ci); const sueloY = getY(vMin + 1.2); ctx.beginPath(); ctx.moveTo(instX, instY); ctx.lineTo(instX - 12, sueloY); ctx.moveTo(instX, instY); ctx.lineTo(instX + 12, sueloY); ctx.strokeStyle = "#475569"; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = configGrafico.cEquipo; ctx.fillRect(instX - 15, instY - 6, 30, 10); ctx.fillStyle = "#1e293b"; ctx.fillRect(instX + 15, instY - 5, 4, 8); }
+        function dibujarMiraJHP(ctx, d, cotamira, ci, getX, getY) { const xMira = getX(d); const ySueloMira = getY(cotamira); const yTopeMira = getY(ci + 0.4); const miraW = 5; ctx.fillStyle = "#ffffff"; ctx.fillRect(xMira - miraW/2, yTopeMira, miraW, ySueloMira - yTopeMira); ctx.strokeStyle = "#334155"; ctx.lineWidth = 1; ctx.strokeRect(xMira - miraW/2, yTopeMira, miraW, ySueloMira - yTopeMira); ctx.fillStyle = "#ef4444"; for(let currY = yTopeMira; currY < ySueloMira; currY += 10) { if(currY + 5 < ySueloMira) ctx.fillRect(xMira - miraW/2, currY, miraW, 5); } ctx.fillStyle = "#64748b"; ctx.font = configGrafico.fDist; ctx.textAlign = "center"; ctx.fillText(d.toFixed(2) + "m", xMira, ySueloMira + 20); const lectura = ci - cotamira; ctx.fillStyle = "#0f172a"; ctx.font = configGrafico.fLect; ctx.save(); ctx.translate(xMira - 8, (ySueloMira + yTopeMira) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(lectura.toFixed(3), 0, 0); ctx.restore(); ctx.textAlign = "start"; }
+
+        function dibujarGraficoPendientes(c0, c1, ci, dT, offset, inter, pendienteRel) { const canvas = document.getElementById('grafico-pendientes'); const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height); const W = canvas.width - configGrafico.mLeft - configGrafico.mRight; const H = canvas.height - configGrafico.mTop - configGrafico.mBottom; let maxC = Math.max(c0, c1, ci); let minC = Math.min(c0, c1); let vMin = minC - 1.2; let vMax = maxC + 1.0; let vRange = vMax - vMin; if (vRange === 0) vRange = 1; const getX = (d) => configGrafico.mLeft + (d / dT) * W; const getY = (c) => configGrafico.mTop + H - ((c - vMin) / vRange) * H; ctx.beginPath(); ctx.moveTo(getX(0), getY(c0)); ctx.lineTo(getX(dT), getY(c1)); ctx.lineTo(getX(dT), configGrafico.mTop + H); ctx.lineTo(getX(0), configGrafico.mTop + H); ctx.closePath(); ctx.fillStyle = "rgba(16, 185, 129, 0.1)"; ctx.fill(); ctx.beginPath(); ctx.moveTo(getX(0), getY(c0)); ctx.lineTo(getX(dT), getY(c1)); ctx.strokeStyle = configGrafico.cSuelo; ctx.lineWidth = 3.5; ctx.stroke(); dibujarBaseTopografica(ctx, ci, vMin, vRange, getX, getY, W, canvas.width); dibujarMiraJHP(ctx, 0, c0, ci, getX, getY); for (let d = offset; d < dT; d += inter) { let cp = c0 + (d * pendienteRel); dibujarMiraJHP(ctx, d, cp, ci, getX, getY); } dibujarMiraJHP(ctx, dT, c1, ci, getX, getY); }
+        function dibujarGraficoTuberiasJHP(c0_solera, c1_solera, ci, dT, offset, inter, diam, pendienteRel) { const canvas = document.getElementById('grafico-tuberias'); const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height); const W = canvas.width - configGrafico.mLeft - configGrafico.mRight; const H = canvas.height - configGrafico.mTop - configGrafico.mBottom; let maxC = Math.max(c0_solera + diam, c1_solera + diam, ci); let minC = Math.min(c0_solera, c1_solera); let vMin = minC - 1.0; let vMax = maxC + 1.0; let vRange = vMax - vMin; if (vRange === 0) vRange = 1; const getX = (d) => configGrafico.mLeft + (d / dT) * W; const getY = (c) => configGrafico.mTop + H - ((c - vMin) / vRange) * H; ctx.beginPath(); ctx.moveTo(getX(0), getY(c0_solera)); ctx.lineTo(getX(dT), getY(c1_solera)); ctx.lineTo(getX(dT), configGrafico.mTop + H); ctx.lineTo(getX(0), configGrafico.mTop + H); ctx.closePath(); ctx.fillStyle = "rgba(139, 69, 19, 0.1)"; ctx.fill(); ctx.beginPath(); ctx.moveTo(getX(0), getY(c0_solera)); ctx.lineTo(getX(dT), getY(c1_solera)); ctx.strokeStyle = "#8b4513"; ctx.lineWidth = 2; ctx.stroke(); ctx.beginPath(); ctx.moveTo(getX(0), getY(c0_solera)); ctx.lineTo(getX(dT), getY(c1_solera)); ctx.lineTo(getX(dT), getY(c1_solera + diam)); ctx.lineTo(getX(0), getY(c0_solera + diam)); ctx.closePath(); ctx.fillStyle = "#94a3b8"; ctx.fill(); ctx.strokeStyle = "#475569"; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = "#475569"; ctx.font = "italic 9px Inter"; ctx.textAlign = "center"; ctx.fillText("Ø " + diam.toFixed(3) + "m", getX(dT/2), getY( (c0_solera + c1_solera)/2 + diam/2 ) + 3); ctx.textAlign = "start"; dibujarBaseTopografica(ctx, ci, vMin, vRange, getX, getY, W, canvas.width); dibujarMiraJHP(ctx, 0, c0_solera + diam, ci, getX, getY); for (let d = offset; d < dT; d += inter) { let cp_solera = c0_solera + (d * pendienteRel); dibujarMiraJHP(ctx, d, cp_solera + diam, ci, getX, getY); } dibujarMiraJHP(ctx, dT, c1_solera + diam, ci, getX, getY); }
+
+        // ==========================================
+        // CÁLCULOS: EDIFICACIONES & SANEAMIENTO
+        // ==========================================
+        function calcularPendientes() { const ci = parseFloat(document.getElementById('p_cotaInst').value); const c0 = parseFloat(document.getElementById('p_cotaIni').value); const c1 = parseFloat(document.getElementById('p_cotaFin').value); const dT = parseFloat(document.getElementById('p_distTotal').value); const offset = parseFloat(document.getElementById('p_offset').value); const inter = parseFloat(document.getElementById('p_inter').value); if (isNaN(ci) || isNaN(c0) || isNaN(c1) || isNaN(dT)) return alert("Complete los datos."); const desnivel = c1 - c0; const pendienteRel = (desnivel / dT); document.getElementById('info-desnivel').innerText = desnivel.toFixed(3); document.getElementById('info-pendiente').innerText = (pendienteRel * 100).toFixed(2); let html = `<table class="res-table"><thead><tr><th>Dist (m)</th><th>Cota</th><th>Mira</th></tr></thead><tbody><tr><td>0.00</td><td>${c0.toFixed(3)}</td><td class="lectura-roja">${(ci - c0).toFixed(3)}</td></tr>`; for (let d = offset; d < dT; d += inter) { let cp = c0 + (d * pendienteRel); html += `<tr><td>${d.toFixed(2)}</td><td>${cp.toFixed(3)}</td><td class="lectura-roja">${(ci - cp).toFixed(3)}</td></tr>`; } html += `<tr class="total-row"><td>${dT.toFixed(2)}</td><td>${c1.toFixed(3)}</td><td class="lectura-roja">${(ci - c1).toFixed(3)}</td></tr></tbody></table>`; document.getElementById('res-pendientes').innerHTML = html; document.getElementById('imprimir-pendientes').classList.remove('hidden'); document.getElementById('grafico-pendientes').classList.remove('hidden'); document.getElementById('btn-pdf-pend').classList.remove('hidden'); dibujarGraficoPendientes(c0, c1, ci, dT, offset, inter, pendienteRel); }
+        function calcularTuberias() { const ci = parseFloat(document.getElementById('t_cotaInst').value); const c0 = parseFloat(document.getElementById('t_cotaIni').value); const c1 = parseFloat(document.getElementById('t_cotaFin').value); const dT = parseFloat(document.getElementById('t_distTotal').value); const offset = parseFloat(document.getElementById('t_offset').value); const inter = parseFloat(document.getElementById('t_inter').value); const diam = parseFloat(document.getElementById('t_diametro').value); if (isNaN(ci) || isNaN(c0) || isNaN(c1) || isNaN(dT) || isNaN(diam)) return alert("Complete todos los datos."); const desnivel_solera = c1 - c0; const pendienteRel = (desnivel_solera / dT); document.getElementById('info-desnivel-t').innerText = desnivel_solera.toFixed(3); document.getElementById('info-pendiente-t').innerText = (pendienteRel * 100).toFixed(2); let html = `<table class="res-table"><thead><tr><th>Dist (m)</th><th>Cota Solera</th><th>Mira (s/Clave)</th></tr></thead><tbody><tr><td>0.00</td><td>${c0.toFixed(3)}</td><td class="lectura-roja">${((ci - c0) - diam).toFixed(3)}</td></tr>`; for (let d = offset; d < dT; d += inter) { let cp = c0 + (d * pendienteRel); let miraClave = (ci - cp) - diam; html += `<tr><td>${d.toFixed(2)}</td><td>${cp.toFixed(3)}</td><td class="lectura-roja">${miraClave.toFixed(3)}</td></tr>`; } let miraFinalClave = (ci - c1) - diam; html += `<tr class="total-row"><td>${dT.toFixed(2)}</td><td>${c1.toFixed(3)}</td><td class="lectura-roja">${miraFinalClave.toFixed(3)}</td></tr></tbody></table>`; document.getElementById('res-tuberias').innerHTML = html; document.getElementById('imprimir-tuberias').classList.remove('hidden'); document.getElementById('grafico-tuberias').classList.remove('hidden'); document.getElementById('btn-pdf-tub').classList.remove('hidden'); dibujarGraficoTuberiasJHP(c0, c1, ci, dT, offset, inter, diam, pendienteRel); }
+        function calcularPasosJHP() { const cInf = parseFloat(document.getElementById('cotaInf').value); const cSup = parseFloat(document.getElementById('cotaSup').value); const n = parseInt(document.getElementById('pasos_n').value); const cEst = parseFloat(document.getElementById('cotaEst').value); if (isNaN(cInf) || isNaN(cSup) || isNaN(n) || n <= 0) return alert("Verifique los datos."); const diferenciaTotal = cSup - cInf; const incrementoBase = Math.floor((diferenciaTotal / n) * 1000) / 1000; let residuoMm = Math.round((diferenciaTotal - (incrementoBase * n)) * 1000); let conteoAjustado = Math.abs(residuoMm); let conteoBase = n - conteoAjustado; let valorAjustado = (residuoMm > 0) ? (incrementoBase + 0.001) : (incrementoBase - 0.001); let resumen = `<div class="p-5 bg-blue-50 border border-blue-100 rounded-3xl mb-6 text-[10px] font-black text-blue-700 tracking-wider">LOG: ${conteoAjustado > 0 ? `${conteoAjustado} PASOS [${valorAjustado.toFixed(3)}m] + ` : ''}${conteoBase} PASOS [${incrementoBase.toFixed(3)}m]</div>`; let html = resumen + `<table class="res-table"><thead><tr><th>Paso</th><th>Cota</th><th>Mira</th></tr></thead><tbody><tr><td>NIVEL 0</td><td>${cInf.toFixed(3)}</td><td>${!isNaN(cEst) ? (cEst - cInf).toFixed(3) : '-'}</td></tr>`; let cotaActual = cInf; let mms = residuoMm; for (let i = 1; i <= n; i++) { let inc = incrementoBase; if (mms > 0) { inc += 0.001; mms--; } else if (mms < 0) { inc -= 0.001; mms++; } cotaActual += inc; html += `<tr class="${i === n ? 'total-row' : ''}"><td>Paso ${i}</td><td>${cotaActual.toFixed(3)}</td><td class="lectura-roja">${!isNaN(cEst) ? (cEst - cotaActual).toFixed(3) : '-'}</td></tr>`; } document.getElementById('resultado-pasos').innerHTML = html + `</tbody></table>`; document.getElementById('imprimir-pasos').classList.remove('hidden'); document.getElementById('btn-pdf-pasos').classList.remove('hidden'); }
+        function calcularCotaJHP() { let cotaInicial = parseFloat(document.getElementById("c_cotaInicial").value); let distancia = parseFloat(document.getElementById("c_distancia").value); let pendiente = parseFloat(document.getElementById("c_pendiente").value); let sentido = document.getElementById("c_sentido").value; if (isNaN(cotaInicial) || isNaN(distancia) || isNaN(pendiente)) { alert("Por favor, llene todos los campos numéricos correctamente."); return; } let desnivel = distancia * (pendiente / 100); let cotaFinal = (sentido === "positivo") ? (cotaInicial + desnivel) : (cotaInicial - desnivel); document.getElementById("info-desnivel-c").innerText = desnivel.toFixed(3); document.getElementById("info-cotafinal-c").innerText = cotaFinal.toFixed(3); let resumenDiv = document.getElementById("resumen-c"); resumenDiv.classList.remove("hidden"); resumenDiv.classList.add("flex"); }
+
+        // ==========================================
+        // CÁLCULOS: CARRETERAS (DG-2018)
+        // ==========================================
+        function disenoFase1() {
+            const imda = parseInt(document.getElementById('dg_imda').value);
+            const oro = parseInt(document.getElementById('dg_oro').value);
+            if(isNaN(imda) || isNaN(oro)) return alert("Completa los datos de IMDA");
+            let clase = ""; let ancho = 0; let bombeo = "2.5%";
+            if(imda > 6000) { clase = "Autopista de 1ra Clase"; ancho = 7.20; }
+            else if(imda >= 4001) { clase = "Autopista de 2da Clase"; ancho = 7.20; }
+            else if(imda >= 2001) { clase = "Carretera de 1ra Clase"; ancho = 7.20; }
+            else if(imda >= 400) { clase = "Carretera de 2da Clase"; ancho = (oro > 2) ? 6.60 : 7.20; }
+            else { clase = "Carretera de 3ra Clase"; ancho = (oro > 2) ? 6.00 : 6.60; bombeo = "2.0% - 3.0%"; }
+            const res = document.getElementById('res_fase1');
+            res.classList.remove('hidden'); res.classList.add('block');
+            res.innerHTML = `<div class="space-y-1"><span class="block text-[10px] font-black text-orange-600 uppercase mb-2 tracking-widest">Resultado F1</span><p><b class="text-slate-800">Jerarquía:</b> ${clase}</p><p><b class="text-slate-800">Ancho Calzada:</b> ${ancho.toFixed(2)} m</p><p><b class="text-slate-800">Bombeo:</b> ${bombeo}</p></div>`;
+        }
+
+        function disenoFase2() {
+            const v = parseFloat(document.getElementById('dg_v_dis').value);
+            const e = parseFloat(document.getElementById('dg_ubicacion').value);
+            const r = parseFloat(document.getElementById('dg_radio_p').value);
+            const l = parseFloat(document.getElementById('dg_vehiculo').value);
+            const p = parseFloat(document.getElementById('dg_pend_v').value) / 100;
+            if(isNaN(v) || isNaN(r)) { alert("Completa Velocidad y Radio"); return; }
+            const f = 0.18 - (v/1000); 
+            const rMin = Math.ceil((v**2)/(127*(e + f)));
+            let sa = 0;
+            if(r) sa = 2 * (r - Math.sqrt(r**2 - l**2)) + (v / (10 * Math.sqrt(r)));
+            const dp = (0.278 * v * 2.5) + (v**2 / (254 * 0.35));
+            const res = document.getElementById('res_fase2');
+            res.classList.remove('hidden'); res.classList.add('block');
+            res.innerHTML = `<div class="space-y-1"><span class="block text-[10px] font-black text-orange-600 uppercase mb-2 tracking-widest">Resultado F2</span><p><b class="text-slate-800">Radio Mínimo Normado:</b> ${rMin} m</p><p><b class="text-slate-800">Sobreancho (Sa):</b> ${r ? sa.toFixed(2) + " m" : "Ingrese radio"}</p><p><b class="text-slate-800">Visibilidad Parada (Dp):</b> ${dp.toFixed(2)} m</p></div>`;
+        }
+
+        function disenoFase3() {
+            const a = Math.abs(parseFloat(document.getElementById('dg_dif_a').value));
+            const v = parseFloat(document.getElementById('dg_v_dis').value);
+            const tipo = document.getElementById('dg_tipo_v').value;
+            const h = parseFloat(document.getElementById('dg_h_talud').value);
+            const mat = document.getElementById('dg_mat_talud').value;
+            if(isNaN(v) || isNaN(a)) { alert("Completa Velocidad (Fase 1) y Diferencia A"); return; }
+            const k = (tipo === "cresta") ? (v**2/400) : (v**2/250);
+            const lMin = k * a;
+            let t = (mat === "roca") ? "1:4 a 1:10 (V:H)" : "1:1 (45°)";
+            let banq = (h > 7) ? "REQUERIDA (Ancho 3m)" : "No obligatoria";
+            const res = document.getElementById('res_fase3');
+            res.classList.remove('hidden'); res.classList.add('block');
+            res.innerHTML = `<div class="space-y-1"><span class="block text-[10px] font-black text-orange-600 uppercase mb-2 tracking-widest">Resultado F3</span><p><b class="text-slate-800">Longitud Curva (Lmin):</b> ${lMin.toFixed(2)} m (K=${k.toFixed(1)})</p><p><b class="text-slate-800">Talud de Corte:</b> ${t}</p><p><b class="text-slate-800">Banquetas Estabilidad:</b> ${banq}</p></div>`;
+        }
+
+        // ==========================================
+        // CÁLCULOS: CARRETERAS (CURVAS VERTICALES)
+        // ==========================================
+        let chartInstanceCV;
+        let datosParaCSV = [];
+
+        function procesarTodoCV() {
+            const v = document.getElementById('cv_velocidad').value;
+            const g1 = parseFloat(document.getElementById('cv_g1').value);
+            const g2 = parseFloat(document.getElementById('cv_g2').value);
+            const L = parseFloat(document.getElementById('cv_L').value);
+            const intervalo = parseFloat(document.getElementById('cv_intervalo').value);
+            const pivAbs = parseFloat(document.getElementById('cv_piv_abs').value);
+            const pivCota = parseFloat(document.getElementById('cv_piv_cota').value);
+
+            if(isNaN(g1) || isNaN(g2) || isNaN(L) || isNaN(intervalo)) return alert("Completa todos los campos de la curva.");
+
+            const A = Math.abs(g1 - g2);
+            const K_actual = L / A;
+            const tipo = (g1 > g2) ? "convexa" : "concava";
+            const K_min = { "40":{convexa:4,concava:9}, "60":{convexa:11,concava:18}, "80":{convexa:26,concava:30}, "100":{convexa:52,concava:45} }[v][tipo];
+
+            const alerta = document.getElementById('alerta-cv');
+            alerta.classList.remove('hidden');
+            if (K_actual < K_min) {
+                alerta.className = 'p-5 rounded-2xl font-bold mt-6 text-center border animate-fade bg-red-50 text-red-600 border-red-200 block';
+                alerta.innerHTML = `⚠️ PELIGRO: K=${K_actual.toFixed(2)} es insuficiente (Mínimo normado: ${K_min}). Se recomienda L=${(K_min*A).toFixed(2)}m`;
+            } else {
+                alerta.className = 'p-5 rounded-2xl font-bold mt-6 text-center border animate-fade bg-green-50 text-green-700 border-green-200 block';
+                alerta.innerHTML = `✅ DISEÑO SEGURO: K=${K_actual.toFixed(2)} cumple con la normativa.`;
+            }
+
+            const pcvAbs = pivAbs - L/2;
+            const pcvCota = pivCota - (g1/100 * L/2);
+            const cuerpo = document.getElementById('cuerpoTablaCV');
+            cuerpo.innerHTML = "";
+            datosParaCSV = [["Punto", "Abscisa", "Distancia_x", "Cota_Tangente", "Correccion_y", "Cota_Rasante"]];
+
+            let labels = [], rasanteY = [], tangenteY = [];
+
+            for (let x = 0; x <= L; x += intervalo) {
+                let absX = pcvAbs + x;
+                let cotaTan = pcvCota + (g1/100 * x);
+                let correccionY = ((g2 - g1) / (200 * L)) * Math.pow(x, 2);
+                let cotaRas = cotaTan + correccionY;
+                let nombre = (x===0) ? "PCV" : (x >= L ? "PTV" : (x === L/2 ? "PIV" : "Punto"));
+                
+                cuerpo.innerHTML += `<tr><td>${nombre}</td><td>${absX.toFixed(2)}</td><td>${x.toFixed(2)}</td><td>${cotaTan.toFixed(3)}</td><td>${correccionY.toFixed(3)}</td><td class="lectura-roja">${cotaRas.toFixed(3)}</td></tr>`;
+                datosParaCSV.push([nombre, absX.toFixed(2), x.toFixed(2), cotaTan.toFixed(3), correccionY.toFixed(3), cotaRas.toFixed(3)]);
+                
+                labels.push(absX.toFixed(0));
+                rasanteY.push(cotaRas.toFixed(3));
+                tangenteY.push(cotaTan.toFixed(3));
+            }
+
+            document.getElementById('seccionTablaCV').classList.remove('hidden');
+            document.getElementById('contenedorGraficoCV').classList.remove('hidden');
+            dibujarCurvaCV(labels, rasanteY, tangenteY);
+        }
+
+        function dibujarCurvaCV(labels, rasante, tangente) {
+            const ctx = document.getElementById('graficoCurva').getContext('2d');
+            if (chartInstanceCV) chartInstanceCV.destroy();
+            chartInstanceCV = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Rasante Final', data: rasante, borderColor: '#ea580c', backgroundColor: '#ea580c', borderWidth: 3, tension: 0.4, fill: false },
+                        { label: 'Tangente Entrada', data: tangente, borderColor: '#94a3b8', borderDash: [5,5], borderWidth: 2, fill: false }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+            });
+        }
+
+        function descargarCSV() {
+            let csvContent = "data:text/csv;charset=utf-8," + datosParaCSV.map(e => e.join(",")).join("\n");
+            let encodedUri = encodeURI(csvContent);
+            let link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "cartera_curva_vertical_JHP.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
