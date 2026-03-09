@@ -90,7 +90,6 @@
                             <p class="text-slate-500 text-sm">Precisión milimétrica en nubes de puntos y cartografía base.</p>
                         </div>
                     </div>
-
                     <div class="glass-card rounded-[2.5rem] overflow-hidden text-center hover:-translate-y-2 transition-all duration-500 group shadow-xl">
                         <div class="h-48 relative overflow-hidden">
                             <img src="https://i.postimg.cc/vc1rb48V/gnss.jpg" alt="Redes GNSS" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
@@ -101,7 +100,6 @@
                             <p class="text-slate-500 text-sm">Puntos de control geodésico certificados con estricto rigor técnico.</p>
                         </div>
                     </div>
-
                     <div class="glass-card rounded-[2.5rem] overflow-hidden text-center hover:-translate-y-2 transition-all duration-500 group shadow-xl">
                         <div class="h-48 relative overflow-hidden">
                             <img src="https://i.postimg.cc/svBYsMfx/consultoria.jpg" alt="Consultoría en Obras" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
@@ -124,7 +122,6 @@
                     <p class="text-yellow-500 font-bold uppercase tracking-[0.3em] text-xs">Ejecución de Proyectos Hospitalarios en Perú</p>
                 </div>
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    
                     <div class="group relative overflow-hidden rounded-[2.5rem] h-80 shadow-2xl bg-slate-800">
                         <img src="https://i.postimg.cc/Hr2rbmB3/mollendo.jpg" alt="Hospital Mollendo" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition duration-1000 scale-110 group-hover:scale-100">
                         <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent p-8 flex flex-col justify-end">
@@ -132,7 +129,6 @@
                             <p class="text-yellow-500 text-[10px] font-bold uppercase tracking-widest">Hospital Alto Inclán - Mollendo</p>
                         </div>
                     </div>
-                    
                     <div class="group relative overflow-hidden rounded-[2.5rem] h-80 shadow-2xl bg-slate-800">
                         <img src="https://i.postimg.cc/8FzjHY0d/puno.jpg" alt="Hospital Puno" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition duration-1000 scale-110 group-hover:scale-100">
                         <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent p-8 flex flex-col justify-end">
@@ -140,7 +136,6 @@
                             <p class="text-yellow-500 text-[10px] font-bold uppercase tracking-widest"> Hospital del Altiplano de EsSalud - Puno</p>
                         </div>
                     </div>
-                    
                     <div class="group relative overflow-hidden rounded-[2.5rem] h-80 shadow-2xl bg-slate-800">
                         <img src="https://i.postimg.cc/gw2nD7Tq/pampas.jpg" alt="Hospital Pampas" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition duration-1000 scale-110 group-hover:scale-100">
                         <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent p-8 flex flex-col justify-end">
@@ -148,7 +143,6 @@
                             <p class="text-yellow-500 text-[10px] font-bold uppercase tracking-widest">Hospital de Pampas - Huancavelica</p>
                         </div>
                     </div>
-
                 </div>
             </div>
         </section>
@@ -166,8 +160,8 @@
             <div class="space-y-5">
                 <input type="text" id="userInput" placeholder="Usuario" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-yellow-500/20 font-bold text-center">
                 <input type="password" id="passInput" placeholder="Contraseña" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-yellow-500/20 font-bold text-center">
-                <p id="errorMsg" class="text-red-500 text-xs font-bold text-center hidden uppercase">Credenciales Incorrectas</p>
-                <button onclick="validarLogin()" class="w-full bg-slate-900 text-white py-6 rounded-2xl font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95">DESBLOQUEAR</button>
+                <p id="errorMsg" class="text-red-500 text-xs font-bold text-center hidden uppercase"></p>
+                <button id="btnDesbloquear" onclick="validarLogin()" class="w-full bg-slate-900 text-white py-6 rounded-2xl font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95">DESBLOQUEAR</button>
                 <button onclick="document.getElementById('loginModal').style.display='none'" class="w-full text-slate-400 font-bold py-3 uppercase text-[10px] tracking-widest hover:text-slate-600 transition-colors">Volver a Inicio</button>
             </div>
         </div>
@@ -207,7 +201,6 @@
                     <button id="btnTabPasos" class="tab-btn px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-500" onclick="switchTab('pasos', 'btnTabPasos')">ESCALERAS</button>
                     <button id="btnTabCotas" class="tab-btn px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-500" onclick="switchTab('cotas', 'btnTabCotas')">COTAS</button>
                 </div>
-
                 <div id="pend" class="form-card active glass-card rounded-[3rem] p-8 md:p-12 shadow-2xl">
                     <div class="grid lg:grid-cols-3 gap-12">
                         <div class="lg:col-span-1 space-y-6">
@@ -420,42 +413,75 @@
     </div>
 
     <script>
-        // LISTA DE USUARIOS (AUTÓNOMA - FUNCIONA EN CUALQUIER LUGAR)
-        const usuariosPermitidos = [
-            { id: 'admin',    pass: '654123' }, 
-            { id: 'percy',    pass: '1234'  }, 
-            { id: 'sandro',   pass: '1234'}, 
-            { id: 'manuel',   pass: '1234'}, 
-            { id: 'jhon',     pass: '1234'}  
-        ];
+        // LÓGICA DE CONEXIÓN A GOOGLE SHEETS (BASE DE DATOS)
+        
+        // ⚠️ AQUÍ ESTÁ TU ENLACE EXACTO DE GOOGLE SHEETS:
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiDyszMC3csF855J9N0bvz8OT5OkPxqN7sIIFVzzcMzg2b568u_D3I9pm7Jc2sVcC7UCjC93UZUvip/pub?gid=0&single=true&output=csv";
 
-        function abrirLogin() { 
-            document.getElementById('loginModal').style.display = 'flex'; 
-            document.getElementById('errorMsg').classList.add('hidden');
-        }
+        async function validarLogin() {
+            const uInput = document.getElementById('userInput').value.trim().toLowerCase();
+            const pInput = document.getElementById('passInput').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            const btn = document.getElementById('btnDesbloquear');
 
-        function validarLogin() {
-            const u = document.getElementById('userInput').value.trim().toLowerCase();
-            const p = document.getElementById('passInput').value.trim();
-            const accesoConcedido = usuariosPermitidos.some(user => user.id === u && user.pass === p);
+            if (!uInput || !pInput) {
+                errorMsg.innerText = "Falta usuario o contraseña";
+                errorMsg.classList.remove('hidden');
+                return;
+            }
 
-            if(accesoConcedido) {
-                document.getElementById('loginModal').style.display = 'none';
-                document.getElementById('contenidoPublico').style.display = 'none';
-                document.getElementById('panelProgramas').style.display = 'block';
-                document.getElementById('nombreUsuarioActivo').innerText = u;
-                document.getElementById('userInput').value = '';
-                document.getElementById('passInput').value = '';
-                window.scrollTo(0,0);
-            } else { 
-                document.getElementById('errorMsg').classList.remove('hidden');
+            // Cambiar estado del botón mientras carga
+            btn.innerText = "VERIFICANDO...";
+            btn.disabled = true;
+
+            try {
+                // Descargar el Excel invisible
+                const response = await fetch(CSV_URL);
+                if (!response.ok) throw new Error("Error en la conexión");
+                const data = await response.text();
+                
+                // Leer las filas del Excel
+                const rows = data.split('\n').map(row => row.split(','));
+                let accesoConcedido = false;
+                
+                // Empezamos en 1 para saltar el título (Usuario,Clave)
+                for (let i = 1; i < rows.length; i++) {
+                    if(rows[i].length >= 2) {
+                        const userDB = rows[i][0].trim().toLowerCase();
+                        const passDB = rows[i][1].trim(); // Eliminar espacios o retornos de carro
+                        
+                        if (uInput === userDB && pInput === passDB) {
+                            accesoConcedido = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (accesoConcedido) {
+                    document.getElementById('loginModal').style.display = 'none';
+                    document.getElementById('contenidoPublico').style.display = 'none';
+                    document.getElementById('panelProgramas').style.display = 'block';
+                    document.getElementById('nombreUsuarioActivo').innerText = uInput;
+                    document.getElementById('userInput').value = '';
+                    document.getElementById('passInput').value = '';
+                    window.scrollTo(0,0);
+                } else {
+                    errorMsg.innerText = "Credenciales Incorrectas";
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorMsg.innerText = "Error: Verifica tu conexión a internet o el enlace del CSV.";
+                errorMsg.classList.remove('hidden');
+                console.error("Fallo la lectura del Sheets:", error);
+            } finally {
+                // Restaurar botón
+                btn.innerText = "DESBLOQUEAR";
+                btn.disabled = false;
             }
         }
         
         function cerrarSesion() { location.reload(); }
-    </script>
 
-    <script>
         // NAVEGACIÓN
         function switchCategory(catId, btnId) {
             document.querySelectorAll('.category-panel').forEach(c => { c.classList.add('hidden'); c.classList.remove('block'); });
