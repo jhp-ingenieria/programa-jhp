@@ -62,7 +62,6 @@
             <div class="flex flex-wrap gap-4 mb-8 bg-slate-200/40 p-3 rounded-[2rem] w-fit backdrop-blur-md">
                 <button id="btnTabPend" class="tab-btn active px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest" onclick="switchTab('pend', 'btnTabPend')">PENDIENTES</button>
                 <button id="btnTabPasos" class="tab-btn px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-500" onclick="switchTab('pasos', 'btnTabPasos')">ESCALERAS</button>
-                <button id="btnTabCota" class="tab-btn px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-500" onclick="switchTab('cota', 'btnTabCota')">CÁLCULO DE COTA</button>
                 <button id="btnTabCotaSup" class="tab-btn px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-500" onclick="switchTab('cota_sup', 'btnTabCotaSup')">COTA SUPERIOR</button>
             </div>
 
@@ -114,32 +113,6 @@
                 </div>
             </div>
 
-            <div id="cota" class="form-card glass-card rounded-[3rem] p-8 md:p-12 shadow-2xl">
-                <div class="grid lg:grid-cols-2 gap-12">
-                    <div class="space-y-6">
-                        <h3 class="text-2xl font-black text-slate-800 italic border-l-4 border-emerald-500 pl-5 uppercase mb-4">Cálculo de Cota</h3>
-                        <div class="space-y-5">
-                            <div><label id="lblCota" class="block text-[10px] font-black text-slate-400 uppercase mb-2">Cota Referencia (m)</label><input type="number" id="c_cotaInicial" value="3.20" onfocus="foco('cota')" oninput="calcularCotaJHP()" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none focus:ring-4 focus:ring-emerald-500/20"></div>
-                            <div><label id="lblDist" class="block text-[10px] font-black text-slate-400 uppercase mb-2">Distancia Horiz. (m)</label><input type="number" id="c_distancia" value="50" onfocus="foco('distancia')" oninput="calcularCotaJHP()" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none focus:ring-4 focus:ring-emerald-500/20"></div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div><label id="lblPend" class="block text-[10px] font-black text-slate-400 uppercase mb-2">Pendiente (%)</label><input type="number" id="c_pendiente" value="1" onfocus="foco('pendiente')" oninput="calcularCotaJHP()" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none focus:ring-4 focus:ring-emerald-500/20"></div>
-                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Sentido</label><select id="c_sentido" onchange="calcularCotaJHP()" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none focus:ring-4 focus:ring-emerald-500/20 cursor-pointer appearance-none"><option value="positivo" selected>Subida (+)</option><option value="negativo">Bajada (-)</option></select></div>
-                            </div>
-                        </div>
-                        <button onclick="calcularCotaJHP()" class="w-full bg-emerald-600 text-white py-6 rounded-2xl font-black uppercase active:scale-95"><i class="fas fa-mountain"></i> CALCULAR COTA FINAL</button>
-                        <div id="cajaResultados" class="hidden p-8 bg-emerald-50 rounded-[2.5rem] border border-emerald-100 flex-col md:flex-row justify-around items-center mt-6">
-                            <div class="text-center"><p class="text-[10px] font-bold text-emerald-500 uppercase mb-2">Desnivel</p><p class="text-3xl font-black text-slate-800"><span id="resDesnivel">0.000</span>m</p></div>
-                            <div class="h-10 w-px bg-emerald-200 hidden md:block"></div>
-                            <div class="text-center"><p class="text-[10px] font-bold text-emerald-500 uppercase mb-2">Cota Final</p><p class="text-3xl font-black text-emerald-600"><span id="resCotaFinal">0.000</span></p></div>
-                        </div>
-                    </div>
-                    <div class="flex flex-col items-center justify-center bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-                        <h2 class="text-sm font-black text-slate-500 uppercase italic mb-4">Sección del Terreno</h2>
-                        <canvas id="canvasJHP" width="600" height="350" class="w-full h-auto bg-slate-50 rounded-[1.5rem] border border-slate-200 shadow-inner"></canvas>
-                    </div>
-                </div>
-            </div>
-
             <div id="cota_sup" class="form-card glass-card rounded-[3rem] p-8 md:p-12 shadow-2xl">
                 <div class="grid lg:grid-cols-2 gap-12">
                     <div class="space-y-6">
@@ -174,7 +147,6 @@
         document.addEventListener("DOMContentLoaded", function() {
             const user = sessionStorage.getItem('sesion_jhp_activa');
             if(user) document.getElementById('nombreUsuarioActivo').innerText = user;
-            setTimeout(calcularCotaJHP, 100); 
             setTimeout(calcularCotaSuperior, 100); 
         });
 
@@ -185,7 +157,6 @@
             document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active', 'text-slate-900', 'bg-yellow-500'); b.classList.add('text-slate-500'); });
             document.getElementById(tabId).classList.add('active');
             document.getElementById(btnId).classList.add('active');
-            if(tabId === 'cota') calcularCotaJHP();
             if(tabId === 'cota_sup') calcularCotaSuperior();
         }
 
@@ -201,13 +172,7 @@
         function calcularPendientes() { const ci=parseFloat(document.getElementById('p_cotaInst').value), c0=parseFloat(document.getElementById('p_cotaIni').value), c1=parseFloat(document.getElementById('p_cotaFin').value), dT=parseFloat(document.getElementById('p_distTotal').value), offset=parseFloat(document.getElementById('p_offset').value), inter=parseFloat(document.getElementById('p_inter').value); if(isNaN(ci)||isNaN(c0)||isNaN(c1)||isNaN(dT)) return; const desnivel=c1-c0, pendRel=desnivel/dT; document.getElementById('info-desnivel').innerText=desnivel.toFixed(3); document.getElementById('info-pendiente').innerText=(pendRel*100).toFixed(2); let html=`<table class="res-table"><thead><tr><th>Dist</th><th>Cota</th><th>Mira</th></tr></thead><tbody>`; for(let d=offset; d<dT; d+=inter) { let cp=c0+(d*pendRel); html+=`<tr><td>${d.toFixed(2)}</td><td>${cp.toFixed(3)}</td><td class="lectura-roja">${(ci-cp).toFixed(3)}</td></tr>`; } html+=`</tbody></table>`; document.getElementById('res-pendientes').innerHTML=html; document.getElementById('imprimir-pendientes').classList.remove('hidden'); document.getElementById('btn-pdf-pend').classList.remove('hidden'); }
         function calcularPasosJHP() { const cInf=parseFloat(document.getElementById('cotaInf').value), cSup=parseFloat(document.getElementById('cotaSup').value), n=parseInt(document.getElementById('pasos_n').value), cEst=parseFloat(document.getElementById('cotaEst').value); if(isNaN(cInf)||isNaN(cSup)||isNaN(n)) return; const difTotal=cSup-cInf, incBase=Math.floor((difTotal/n)*1000)/1000; let resMm=Math.round((difTotal-(incBase*n))*1000), cotaActual=cInf, html=`<table class="res-table">`; for(let i=1; i<=n; i++) { let inc=incBase; if(resMm>0){inc+=0.001; resMm--;} else if(resMm<0){inc-=0.001; resMm++;} cotaActual+=inc; html+=`<tr><td>Paso ${i}</td><td>${cotaActual.toFixed(3)}</td></tr>`; } document.getElementById('resultado-pasos').innerHTML=html+"</table>"; document.getElementById('imprimir-pasos').classList.remove('hidden'); document.getElementById('btn-pdf-pasos').classList.remove('hidden'); }
         
-        // LÓGICA CÁLCULO DE COTA (MÓDULO 3)
-        let elementoActivo = "";
-        function foco(tipo) { elementoActivo = tipo; document.querySelectorAll('#cota .active-label').forEach(e => e.classList.remove('active-label')); if(document.getElementById('lbl'+tipo.charAt(0).toUpperCase()+tipo.slice(1))) document.getElementById('lbl'+tipo.charAt(0).toUpperCase()+tipo.slice(1)).classList.add('active-label'); dibujarSeccionCota(); }
-        function calcularCotaJHP() { const ci = parseFloat(document.getElementById("cotaInicial").value), d = parseFloat(document.getElementById("distancia").value), p = parseFloat(document.getElementById("pendiente").value), s = document.getElementById("sentido").value; if(isNaN(ci)||isNaN(d)||isNaN(p)) return; let des = d*(p/100), cf = s==="positivo"?ci+des:ci-des; document.getElementById("resDesnivel").innerText=des.toFixed(3); document.getElementById("resCotaFinal").innerText=cf.toFixed(3); document.getElementById("cajaResultados").classList.remove("hidden"); document.getElementById("cajaResultados").classList.add("flex"); dibujarSeccionCota(); }
-        function dibujarSeccionCota() { const canvas=document.getElementById('canvasJHP'); if(!canvas)return; const ctx=canvas.getContext('2d'), cIni=parseFloat(document.getElementById("cotaInicial").value)||0, d=parseFloat(document.getElementById("distancia").value)||0, p=parseFloat(document.getElementById("pendiente").value)||0, s=document.getElementById("sentido").value; ctx.clearRect(0,0,canvas.width,canvas.height); let dy=p===0?0:90; dy*=s==="positivo"?-1:1; const x1=150, x2=canvas.width-120, y1=s==="positivo"?canvas.height-120:120, y2=y1+dy; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y1); ctx.lineTo(x2,y2); ctx.closePath(); ctx.lineWidth=2.5; ctx.strokeStyle="#475569"; ctx.stroke(); if(p>0){ctx.beginPath(); let ang=Math.atan2(dy,x2-x1); if(s==="positivo"){ctx.arc(x1,y1,40,ang,0);}else{ctx.arc(x1,y1,40,0,ang);} ctx.strokeStyle="#0ea5e9"; ctx.stroke(); ctx.fillStyle="#334155"; ctx.font="italic 18px 'Playfair Display'"; ctx.fillText("α", x1+50, y1+(s==="positivo"?-10:20));} ctx.font="bold 14px Inter"; ctx.fillStyle=(elementoActivo==="cota")?"#eab308":"#0f172a"; ctx.textAlign="right"; ctx.textBaseline="middle"; ctx.fillText(`Cota Inicial: ${cIni.toFixed(2)}m`, x1-15, y1); ctx.fillStyle="#059669"; ctx.textAlign="center"; ctx.fillText(`Cota Final: ${(s==="positivo"?cIni+(d*p/100):cIni-(d*p/100)).toFixed(2)}m`, x2, y2+(s==="positivo"?-20:20)); ctx.fillStyle=(elementoActivo==="distancia")?"#eab308":"#475569"; ctx.fillText(`Distancia: ${d}m`,(x1+x2)/2,y1+(s==="positivo"?25:-15)); ctx.fillStyle="#475569"; ctx.textAlign="left"; ctx.fillText(`ΔH = ${(d*p/100).toFixed(2)}m`, x2+10, (y1+y2)/2); ctx.save(); ctx.translate((x1+x2)/2,(y1+y2)/2); ctx.rotate(Math.atan2(y2-y1,x2-x1)); ctx.fillStyle=(elementoActivo==="pendiente")?"#eab308":"#0f172a"; ctx.textAlign="center"; ctx.fillText(`Pendiente del ${p}%`,0,-15); ctx.restore(); }
-
-        // LÓGICA CÁLCULO DE COTA SUPERIOR (MÓDULO 4 - NUEVO)
+        // LÓGICA CÁLCULO DE COTA SUPERIOR
         let cs_elementoActivo = "";
         function focoSup(tipo) { cs_elementoActivo = tipo; document.querySelectorAll('#cota_sup .active-label').forEach(e => e.classList.remove('active-label')); if(document.getElementById('cs_lbl'+tipo.charAt(0).toUpperCase()+tipo.slice(1))) document.getElementById('cs_lbl'+tipo.charAt(0).toUpperCase()+tipo.slice(1)).classList.add('active-label'); dibujarSup(); }
         function calcularCotaSuperior() { const ci = parseFloat(document.getElementById("cs_cotaInicial").value), d = parseFloat(document.getElementById("cs_distancia").value), p = parseFloat(document.getElementById("cs_pendiente").value), s = document.getElementById("cs_sentido").value; if(isNaN(ci)||isNaN(d)||isNaN(p)) return; let des = d*(p/100), cf = s==="positivo"?ci+des:ci-des; document.getElementById("cs_resDesnivel").innerText=des.toFixed(3); document.getElementById("cs_resCotaFinal").innerText=cf.toFixed(3); document.getElementById("cs_cajaResultados").classList.remove("hidden"); document.getElementById("cs_cajaResultados").classList.add("flex"); dibujarSup(); }
