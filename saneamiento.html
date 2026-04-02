@@ -12,6 +12,8 @@
         body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
         .glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05); }
         .res-table { width: 100%; border-collapse: separate; border-radius: 1.5rem; overflow: hidden; } .res-table th { background-color: #0f172a; color: #f8fafc; padding: 1rem; text-transform: uppercase; font-size: 0.7rem; } .res-table td { padding: 1rem; border-bottom: 1px solid #e2e8f0; background: rgba(255,255,255,0.7); font-size: 0.9rem; } .lectura-roja { color: #e11d48; font-weight: 700; font-family: monospace; font-size: 1.1rem; } .total-row td { background-color: #fef9c3 !important; font-weight: 800; border-top: 2px solid #eab308; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade { animation: fadeIn 0.5s ease-out forwards; }
         @media print { body.printing-mode > :not(#print-container) { display: none !important; } #print-container { display: block !important; width: 100%; padding: 20px; } }
     </style>
 </head>
@@ -59,6 +61,7 @@
                                 <div class="text-center"><p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Pendiente</p><p class="text-4xl font-black text-indigo-600"><span id="info-pendiente-t"></span>%</p></div>
                             </div>
                             <div class="overflow-x-auto rounded-[2rem] border border-slate-100 mb-8" id="res-tuberias"></div>
+                            <canvas id="grafico-tuberias" width="800" height="350" class="w-full bg-slate-50 rounded-[2rem] border border-slate-200 shadow-inner animate-fade mt-6"></canvas>
                         </div>
                         <button id="btn-pdf-tub" onclick="descargarPDF('imprimir-tuberias')" class="hidden mt-6 w-full bg-red-600 text-white py-5 rounded-2xl font-black uppercase active:scale-95"><i class="fas fa-file-pdf text-xl"></i> DESCARGAR PDF</button>
                     </div>
@@ -70,7 +73,56 @@
         document.getElementById('nombreUsuarioActivo').innerText = sessionStorage.getItem('sesion_jhp_activa');
         function cerrarSesion() { sessionStorage.removeItem('sesion_jhp_activa'); window.location.href = 'index.html'; }
         function descargarPDF(idContenedor) { const elementoOriginal = document.getElementById(idContenedor); let printContainer = document.getElementById('print-container') || document.createElement('div'); printContainer.id = 'print-container'; document.body.appendChild(printContainer); printContainer.innerHTML = elementoOriginal.innerHTML; document.body.classList.add('printing-mode'); window.print(); document.body.classList.remove('printing-mode'); printContainer.innerHTML = ''; }
-        function calcularTuberias() { const ci=parseFloat(document.getElementById('t_cotaInst').value), c0=parseFloat(document.getElementById('t_cotaIni').value), c1=parseFloat(document.getElementById('t_cotaFin').value), dT=parseFloat(document.getElementById('t_distTotal').value), offset=parseFloat(document.getElementById('t_offset').value), inter=parseFloat(document.getElementById('t_inter').value), diam=parseFloat(document.getElementById('t_diametro').value); if(isNaN(ci)||isNaN(c0)||isNaN(c1)||isNaN(diam)) return; const des=c1-c0, pendRel=des/dT; document.getElementById('info-desnivel-t').innerText=des.toFixed(3); document.getElementById('info-pendiente-t').innerText=(pendRel*100).toFixed(2); let html=`<table class="res-table"><thead><tr><th>Dist</th><th>Cota Solera</th><th>Mira (Clave)</th></tr></thead><tbody>`; for(let d=offset; d<dT; d+=inter) { let cp=c0+(d*pendRel); html+=`<tr><td>${d.toFixed(2)}</td><td>${cp.toFixed(3)}</td><td class="lectura-roja">${((ci-cp)-diam).toFixed(3)}</td></tr>`; } html+=`</tbody></table>`; document.getElementById('res-tuberias').innerHTML=html; document.getElementById('imprimir-tuberias').classList.remove('hidden'); document.getElementById('btn-pdf-tub').classList.remove('hidden'); }
+        
+        // ========================================================
+        // MOTOR GRÁFICO RESTAURADO (MIRAS Y NIVEL)
+        // ========================================================
+        const configGrafico = { mLeft: 70, mRight: 60, mTop: 50, mBottom: 75, fVisual: "bold 10px Inter", fDist: "600 9px Inter", fLect: "bold 9px monospace", cSuelo: "#0f172a", cVisual: "#ef4444", cEquipo: "#eab308" };
+        
+        function dibujarBaseTopografica(ctx, ci, vMin, vRange, getX, getY, W, canvasW) { 
+            ctx.beginPath(); ctx.moveTo(configGrafico.mLeft - 30, getY(ci)); ctx.lineTo(canvasW - configGrafico.mRight + 30, getY(ci)); ctx.strokeStyle = configGrafico.cVisual; ctx.lineWidth = 1.2; ctx.setLineDash([8, 5]); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = configGrafico.cVisual; ctx.font = configGrafico.fVisual; ctx.fillText("Visual: " + ci.toFixed(3), configGrafico.mLeft + 5, getY(ci) - 8); const instX = getX(0) - 25; const instY = getY(ci); const sueloY = getY(vMin + 1.2); ctx.beginPath(); ctx.moveTo(instX, instY); ctx.lineTo(instX - 12, sueloY); ctx.moveTo(instX, instY); ctx.lineTo(instX + 12, sueloY); ctx.strokeStyle = "#475569"; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = configGrafico.cEquipo; ctx.fillRect(instX - 15, instY - 6, 30, 10); ctx.fillStyle = "#1e293b"; ctx.fillRect(instX + 15, instY - 5, 4, 8); 
+        }
+        
+        function dibujarMiraJHP(ctx, d, cotamira, ci, getX, getY) { 
+            const xMira = getX(d); const ySueloMira = getY(cotamira); const yTopeMira = getY(ci + 0.4); const miraW = 5; ctx.fillStyle = "#ffffff"; ctx.fillRect(xMira - miraW/2, yTopeMira, miraW, ySueloMira - yTopeMira); ctx.strokeStyle = "#334155"; ctx.lineWidth = 1; ctx.strokeRect(xMira - miraW/2, yTopeMira, miraW, ySueloMira - yTopeMira); ctx.fillStyle = "#ef4444"; for(let currY = yTopeMira; currY < ySueloMira; currY += 10) { if(currY + 5 < ySueloMira) ctx.fillRect(xMira - miraW/2, currY, miraW, 5); } ctx.fillStyle = "#64748b"; ctx.font = configGrafico.fDist; ctx.textAlign = "center"; ctx.fillText(d.toFixed(2) + "m", xMira, ySueloMira + 20); const lectura = ci - cotamira; ctx.fillStyle = "#0f172a"; ctx.font = configGrafico.fLect; ctx.save(); ctx.translate(xMira - 8, (ySueloMira + yTopeMira) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(lectura.toFixed(3), 0, 0); ctx.restore(); ctx.textAlign = "start"; 
+        }
+
+        function dibujarGraficoTuberiasJHP(c0_solera, c1_solera, ci, dT, offset, inter, diam, pendienteRel) { 
+            const canvas = document.getElementById('grafico-tuberias'); 
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d'); 
+            ctx.clearRect(0, 0, canvas.width, canvas.height); 
+            const W = canvas.width - configGrafico.mLeft - configGrafico.mRight; 
+            const H = canvas.height - configGrafico.mTop - configGrafico.mBottom; 
+            let maxC = Math.max(c0_solera + diam, c1_solera + diam, ci); let minC = Math.min(c0_solera, c1_solera); let vMin = minC - 1.0; let vMax = maxC + 1.0; let vRange = vMax - vMin; if (vRange === 0) vRange = 1; 
+            const getX = (d) => configGrafico.mLeft + (d / dT) * W; 
+            const getY = (c) => configGrafico.mTop + H - ((c - vMin) / vRange) * H; 
+            ctx.beginPath(); ctx.moveTo(getX(0), getY(c0_solera)); ctx.lineTo(getX(dT), getY(c1_solera)); ctx.lineTo(getX(dT), configGrafico.mTop + H); ctx.lineTo(getX(0), configGrafico.mTop + H); ctx.closePath(); ctx.fillStyle = "rgba(139, 69, 19, 0.1)"; ctx.fill(); ctx.beginPath(); ctx.moveTo(getX(0), getY(c0_solera)); ctx.lineTo(getX(dT), getY(c1_solera)); ctx.strokeStyle = "#8b4513"; ctx.lineWidth = 2; ctx.stroke(); ctx.beginPath(); ctx.moveTo(getX(0), getY(c0_solera)); ctx.lineTo(getX(dT), getY(c1_solera)); ctx.lineTo(getX(dT), getY(c1_solera + diam)); ctx.lineTo(getX(0), getY(c0_solera + diam)); ctx.closePath(); ctx.fillStyle = "#94a3b8"; ctx.fill(); ctx.strokeStyle = "#475569"; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = "#475569"; ctx.font = "italic 9px Inter"; ctx.textAlign = "center"; ctx.fillText("Ø " + diam.toFixed(3) + "m", getX(dT/2), getY( (c0_solera + c1_solera)/2 + diam/2 ) + 3); ctx.textAlign = "start"; 
+            dibujarBaseTopografica(ctx, ci, vMin, vRange, getX, getY, W, canvas.width); 
+            dibujarMiraJHP(ctx, 0, c0_solera + diam, ci, getX, getY); 
+            for (let d = offset; d < dT; d += inter) { 
+                let cp_solera = c0_solera + (d * pendienteRel); 
+                dibujarMiraJHP(ctx, d, cp_solera + diam, ci, getX, getY); 
+            } 
+            dibujarMiraJHP(ctx, dT, c1_solera + diam, ci, getX, getY); 
+        }
+
+        function calcularTuberias() { 
+            const ci=parseFloat(document.getElementById('t_cotaInst').value), c0=parseFloat(document.getElementById('t_cotaIni').value), c1=parseFloat(document.getElementById('t_cotaFin').value), dT=parseFloat(document.getElementById('t_distTotal').value), offset=parseFloat(document.getElementById('t_offset').value), inter=parseFloat(document.getElementById('t_inter').value), diam=parseFloat(document.getElementById('t_diametro').value); 
+            if(isNaN(ci)||isNaN(c0)||isNaN(c1)||isNaN(diam)) return; 
+            const des=c1-c0, pendRel=des/dT; 
+            document.getElementById('info-desnivel-t').innerText=des.toFixed(3); 
+            document.getElementById('info-pendiente-t').innerText=(pendRel*100).toFixed(2); 
+            let html=`<table class="res-table"><thead><tr><th>Dist</th><th>Cota Solera</th><th>Mira (Clave)</th></tr></thead><tbody>`; 
+            for(let d=offset; d<dT; d+=inter) { let cp=c0+(d*pendRel); html+=`<tr><td>${d.toFixed(2)}</td><td>${cp.toFixed(3)}</td><td class="lectura-roja">${((ci-cp)-diam).toFixed(3)}</td></tr>`; } 
+            html+=`</tbody></table>`; 
+            document.getElementById('res-tuberias').innerHTML=html; 
+            document.getElementById('imprimir-tuberias').classList.remove('hidden'); 
+            document.getElementById('btn-pdf-tub').classList.remove('hidden'); 
+            
+            // LLAMADO A LA FUNCIÓN DE DIBUJO RESTAURADA
+            dibujarGraficoTuberiasJHP(c0, c1, ci, dT, offset, inter, diam, pendRel);
+        }
     </script>
 </body>
 </html>
