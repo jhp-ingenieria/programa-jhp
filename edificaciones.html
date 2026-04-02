@@ -9,37 +9,61 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; min-height: 100vh; position: relative; }
         .glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05); }
-        .tab-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); } .tab-btn.active { background: #eab308; color: #0f172a; box-shadow: 0 10px 20px -5px rgba(234, 179, 8, 0.4); transform: translateY(-2px); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } } .animate-fade { animation: fadeIn 0.5s ease-out forwards; }
-        .res-table { width: 100%; border-collapse: separate; border-radius: 1.5rem; overflow: hidden; } .res-table th { background-color: #0f172a; color: #f8fafc; padding: 1rem; text-transform: uppercase; font-size: 0.7rem; } .res-table td { padding: 1rem; border-bottom: 1px solid #e2e8f0; background: rgba(255,255,255,0.7); font-size: 0.9rem; } .lectura-roja { color: #e11d48; font-weight: 700; font-family: monospace; font-size: 1.1rem; } .total-row td { background-color: #fef9c3 !important; font-weight: 800; border-top: 2px solid #eab308; }
-        .form-card { display: none; } .form-card.active { display: block; animation: fadeIn 0.5s ease-out; } .active-label { color: #eab308 !important; border-left: 3px solid #eab308; padding-left: 5px; }
-        @media print { body.printing-mode > :not(#print-container) { display: none !important; } #print-container { display: block !important; width: 100%; padding: 20px; } }
+        .tab-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .tab-btn.active { background: #eab308; color: #0f172a; box-shadow: 0 10px 20px -5px rgba(234, 179, 8, 0.4); transform: translateY(-2px); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade { animation: fadeIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+        .res-table { width: 100%; border-spacing: 0; border-collapse: separate; border-radius: 1.5rem; overflow: hidden; }
+        .res-table th { background-color: #0f172a; color: #f8fafc; padding: 1.25rem; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.1em; }
+        .res-table td { padding: 1rem; border-bottom: 1px solid #e2e8f0; background: rgba(255,255,255,0.7); font-size: 0.9rem; }
+        .res-table tr:hover td { background-color: #fffde7; }
+        .lectura-roja { color: #e11d48; font-weight: 700; font-family: monospace; font-size: 1.1rem; }
+        .total-row td { background-color: #fef9c3 !important; font-weight: 800; border-top: 2px solid #eab308; }
+        .form-card { display: none; }
+        .form-card.active { display: block; animation: fadeIn 0.5s ease-out; }
+        .active-label { color: #eab308 !important; border-left: 3px solid #eab308; padding-left: 5px; }
+        @media print {
+            body.printing-mode > :not(#print-container) { display: none !important; }
+            body.printing-mode { background-color: #ffffff !important; margin: 0; padding: 0; }
+            #print-container { display: block !important; width: 100%; padding: 20px; }
+            table { page-break-inside: auto; width: 100%; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
     </style>
 </head>
 <body>
+
     <div class="min-h-screen p-4 md:p-8 block">
         <div class="max-w-6xl mx-auto">
             <header class="flex flex-col md:flex-row justify-between items-center gap-6 mb-8 bg-slate-900 p-8 rounded-[3rem] shadow-2xl relative overflow-hidden">
                 <div class="flex items-center gap-5 relative z-10">
                     <div class="w-16 h-16 bg-yellow-500 rounded-[1.5rem] flex items-center justify-center shadow-2xl rotate-3"><i class="fas fa-building text-slate-900 text-2xl"></i></div>
-                    <div><h2 class="text-white font-black text-2xl italic uppercase tracking-wider">EDIFICACIONES</h2><p class="text-yellow-500 text-[10px] font-bold tracking-[0.3em]">Módulo Topográfico | <span id="nombreUsuarioActivo" class="text-white uppercase"></span></p></div>
+                    <div>
+                        <h2 class="text-white font-black text-2xl italic uppercase tracking-wider">EDIFICACIONES</h2>
+                        <p class="text-yellow-500 text-[10px] font-bold tracking-[0.3em]">Módulo Topográfico | <span id="nombreUsuarioActivo" class="text-white uppercase"></span></p>
+                    </div>
                 </div>
-                <div class="flex gap-4 z-10"><button onclick="cerrarSesion()" class="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white px-8 py-3 rounded-2xl text-[10px] font-black tracking-[0.2em] transition-all border border-red-500/20"><i class="fas fa-power-off mr-2"></i> SALIR</button></div>
+                <div class="flex gap-4 z-10">
+                    <button onclick="cerrarSesion()" class="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white px-8 py-3 rounded-2xl text-[10px] font-black tracking-[0.2em] transition-all border border-red-500/20 active:scale-95"><i class="fas fa-power-off mr-2"></i> SALIR</button>
+                </div>
             </header>
 
             <div class="flex flex-wrap gap-3 mb-6">
-                <a href="edificaciones.html" class="bg-slate-900 text-white px-7 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-lg transition-all"><i class="fas fa-building mr-2"></i> Edificaciones</a>
-                <a href="saneamiento.html" class="bg-white text-slate-600 px-7 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all border border-slate-200"><i class="fas fa-water mr-2"></i> Saneamiento</a>
-                <a href="carreteras.html" class="bg-white text-slate-600 px-7 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all border border-slate-200"><i class="fas fa-road mr-2"></i> Carreteras</a>
-                <a href="lineas.html" class="bg-white text-slate-600 px-7 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all border border-slate-200"><i class="fas fa-bolt mr-2"></i> Líneas de Tensión</a>
+                <a href="edificaciones.html" class="bg-slate-900 text-white px-7 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-95"><i class="fas fa-building mr-2"></i> Edificaciones</a>
+                <a href="saneamiento.html" class="bg-white text-slate-600 px-7 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all border border-slate-200 active:scale-95"><i class="fas fa-water mr-2"></i> Saneamiento</a>
+                <a href="carreteras.html" class="bg-white text-slate-600 px-7 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all border border-slate-200 active:scale-95"><i class="fas fa-road mr-2"></i> Carreteras</a>
+                <a href="lineas.html" class="bg-white text-slate-600 px-7 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all border border-slate-200 active:scale-95"><i class="fas fa-bolt mr-2"></i> Líneas de Tensión</a>
             </div>
 
             <div class="flex flex-wrap gap-4 mb-8 bg-slate-200/40 p-3 rounded-[2rem] w-fit backdrop-blur-md">
                 <button id="btnTabPend" class="tab-btn active px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest" onclick="switchTab('pend', 'btnTabPend')">PENDIENTES</button>
                 <button id="btnTabPasos" class="tab-btn px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-500" onclick="switchTab('pasos', 'btnTabPasos')">ESCALERAS</button>
                 <button id="btnTabCota" class="tab-btn px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-500" onclick="switchTab('cota', 'btnTabCota')">CÁLCULO DE COTA</button>
+                <button id="btnTabCotaSup" class="tab-btn px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-500" onclick="switchTab('cota_sup', 'btnTabCotaSup')">COTA SUPERIOR</button>
             </div>
 
             <div id="pend" class="form-card active glass-card rounded-[3rem] p-8 md:p-12 shadow-2xl">
@@ -47,15 +71,15 @@
                     <div class="lg:col-span-1 space-y-6">
                         <h3 class="text-2xl font-black text-slate-800 italic border-l-4 border-yellow-500 pl-5 uppercase mb-4">Parámetros</h3>
                         <div class="space-y-5">
-                            <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Cota Instrumento (m)</label><input type="number" id="p_cotaInst" step="0.001" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold"></div>
+                            <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Cota Instrumento (m)</label><input type="number" id="p_cotaInst" step="0.001" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none" placeholder="0.000"></div>
                             <div class="grid grid-cols-2 gap-4">
-                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Cota Inicio</label><input type="number" id="p_cotaIni" step="0.001" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold"></div>
-                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Cota Fin</label><input type="number" id="p_cotaFin" step="0.001" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold"></div>
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Cota Inicio</label><input type="number" id="p_cotaIni" step="0.001" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none" placeholder="0.000"></div>
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Cota Fin</label><input type="number" id="p_cotaFin" step="0.001" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none" placeholder="0.000"></div>
                             </div>
-                            <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Distancia Total (m)</label><input type="number" id="p_distTotal" step="0.01" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold"></div>
+                            <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Distancia Total (m)</label><input type="number" id="p_distTotal" step="0.01" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none" placeholder="0.00"></div>
                             <div class="grid grid-cols-2 gap-4">
-                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Offset</label><input type="number" id="p_offset" value="0.50" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold"></div>
-                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Interv.</label><input type="number" id="p_inter" value="3.00" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold"></div>
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Offset</label><input type="number" id="p_offset" value="0.50" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none"></div>
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Interv.</label><input type="number" id="p_inter" value="3.00" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none"></div>
                             </div>
                         </div>
                         <button onclick="calcularPendientes()" class="w-full bg-slate-900 text-yellow-500 py-6 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl active:scale-95"><i class="fas fa-sync-alt"></i> GENERAR TABLA</button>
@@ -68,7 +92,7 @@
                             </div>
                             <div class="overflow-x-auto rounded-[2rem] border border-slate-100 mb-8" id="res-pendientes"></div>
                         </div>
-                        <button id="btn-pdf-pend" onclick="descargarPDF('imprimir-pendientes')" class="hidden mt-6 w-full bg-red-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-red-700 shadow-xl"><i class="fas fa-file-pdf text-xl"></i> DESCARGAR PDF</button>
+                        <button id="btn-pdf-pend" onclick="descargarPDF('imprimir-pendientes')" class="hidden mt-6 w-full bg-red-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest active:scale-95"><i class="fas fa-file-pdf text-xl"></i> DESCARGAR PDF</button>
                     </div>
                 </div>
             </div>
@@ -95,11 +119,11 @@
                     <div class="space-y-6">
                         <h3 class="text-2xl font-black text-slate-800 italic border-l-4 border-emerald-500 pl-5 uppercase mb-4">Cálculo de Cota</h3>
                         <div class="space-y-5">
-                            <div><label id="lblCota" class="block text-[10px] font-black text-slate-400 uppercase mb-2">Cota Referencia (m)</label><input type="number" id="c_cotaInicial" value="3.20" onfocus="foco('cota')" oninput="calcularCotaJHP()" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold"></div>
-                            <div><label id="lblDist" class="block text-[10px] font-black text-slate-400 uppercase mb-2">Distancia Horiz. (m)</label><input type="number" id="c_distancia" value="50" onfocus="foco('distancia')" oninput="calcularCotaJHP()" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold"></div>
+                            <div><label id="lblCota" class="block text-[10px] font-black text-slate-400 uppercase mb-2">Cota Referencia (m)</label><input type="number" id="c_cotaInicial" value="3.20" onfocus="foco('cota')" oninput="calcularCotaJHP()" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none focus:ring-4 focus:ring-emerald-500/20"></div>
+                            <div><label id="lblDist" class="block text-[10px] font-black text-slate-400 uppercase mb-2">Distancia Horiz. (m)</label><input type="number" id="c_distancia" value="50" onfocus="foco('distancia')" oninput="calcularCotaJHP()" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none focus:ring-4 focus:ring-emerald-500/20"></div>
                             <div class="grid grid-cols-2 gap-4">
-                                <div><label id="lblPend" class="block text-[10px] font-black text-slate-400 uppercase mb-2">Pendiente (%)</label><input type="number" id="c_pendiente" value="1" onfocus="foco('pendiente')" oninput="calcularCotaJHP()" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold"></div>
-                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Sentido</label><select id="c_sentido" onchange="calcularCotaJHP()" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none"><option value="positivo" selected>Subida (+)</option><option value="negativo">Bajada (-)</option></select></div>
+                                <div><label id="lblPend" class="block text-[10px] font-black text-slate-400 uppercase mb-2">Pendiente (%)</label><input type="number" id="c_pendiente" value="1" onfocus="foco('pendiente')" oninput="calcularCotaJHP()" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none focus:ring-4 focus:ring-emerald-500/20"></div>
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Sentido</label><select id="c_sentido" onchange="calcularCotaJHP()" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none focus:ring-4 focus:ring-emerald-500/20 cursor-pointer appearance-none"><option value="positivo" selected>Subida (+)</option><option value="negativo">Bajada (-)</option></select></div>
                             </div>
                         </div>
                         <button onclick="calcularCotaJHP()" class="w-full bg-emerald-600 text-white py-6 rounded-2xl font-black uppercase active:scale-95"><i class="fas fa-mountain"></i> CALCULAR COTA FINAL</button>
@@ -111,27 +135,83 @@
                     </div>
                     <div class="flex flex-col items-center justify-center bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
                         <h2 class="text-sm font-black text-slate-500 uppercase italic mb-4">Sección del Terreno</h2>
-                        <canvas id="canvasJHP" width="600" height="350" class="w-full h-auto bg-slate-50 rounded-[1.5rem]"></canvas>
+                        <canvas id="canvasJHP" width="600" height="350" class="w-full h-auto bg-slate-50 rounded-[1.5rem] border border-slate-200 shadow-inner"></canvas>
                     </div>
                 </div>
             </div>
+
+            <div id="cota_sup" class="form-card glass-card rounded-[3rem] p-8 md:p-12 shadow-2xl">
+                <div class="grid lg:grid-cols-2 gap-12">
+                    <div class="space-y-6">
+                        <h3 class="text-2xl font-black text-slate-800 italic border-l-4 border-blue-500 pl-5 uppercase mb-4">Cota Superior</h3>
+                        <div class="space-y-5">
+                            <div><label id="cs_lblCota" class="block text-[10px] font-black text-slate-400 uppercase mb-2 transition-all">Cota Referencia (Inicial)</label><input type="number" id="cs_cotaInicial" value="3.20" step="any" onfocus="focoSup('cota')" oninput="calcularCotaSuperior()" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none focus:ring-4 focus:ring-blue-500/20"></div>
+                            <div><label id="cs_lblDist" class="block text-[10px] font-black text-slate-400 uppercase mb-2 transition-all">Distancia Horizontal (m)</label><input type="number" id="cs_distancia" value="50" step="any" onfocus="focoSup('distancia')" oninput="calcularCotaSuperior()" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none focus:ring-4 focus:ring-blue-500/20"></div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label id="cs_lblPend" class="block text-[10px] font-black text-slate-400 uppercase mb-2 transition-all">Pendiente (%)</label><input type="number" id="cs_pendiente" value="1" step="any" onfocus="focoSup('pendiente')" oninput="calcularCotaSuperior()" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none focus:ring-4 focus:ring-blue-500/20"></div>
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Sentido</label><select id="cs_sentido" onchange="calcularCotaSuperior()" class="w-full p-5 bg-slate-50 rounded-2xl border font-bold outline-none focus:ring-4 focus:ring-blue-500/20 cursor-pointer appearance-none"><option value="positivo" selected>Positivo (+) / Subida</option><option value="negativo">Negativo (-) / Bajada</option></select></div>
+                            </div>
+                        </div>
+                        <button onclick="calcularCotaSuperior()" class="w-full bg-blue-600 text-white py-6 rounded-2xl font-black uppercase active:scale-95 shadow-xl hover:bg-blue-700 transition-all"><i class="fas fa-level-up-alt"></i> CALCULAR COTA FINAL</button>
+                        <div id="cs_cajaResultados" class="hidden p-8 bg-blue-50 rounded-[2.5rem] border border-blue-100 flex-col md:flex-row justify-around items-center mt-6 shadow-inner animate-fade">
+                            <div class="text-center"><p class="text-[10px] font-bold text-blue-500 uppercase mb-2">Desnivel (ΔH)</p><p class="text-3xl font-black text-slate-800"><span id="cs_resDesnivel">0.000</span><span class="text-sm ml-1 text-slate-400">m</span></p></div>
+                            <div class="h-10 w-px bg-blue-200 hidden md:block"></div>
+                            <div class="text-center"><p class="text-[10px] font-bold text-blue-500 uppercase mb-2">Cota Final</p><p class="text-3xl font-black text-blue-600"><span id="cs_resCotaFinal">0.000</span></p></div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center justify-center bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+                        <h2 class="text-sm font-black text-slate-500 uppercase italic mb-4 tracking-widest">Sección del Terreno</h2>
+                        <canvas id="cs_canvasJHP" width="600" height="350" class="w-full h-auto bg-slate-50 rounded-[1.5rem] border border-slate-200 shadow-inner"></canvas>
+                        <p class="text-[10px] text-slate-400 mt-4 font-bold uppercase tracking-widest text-center">Esquema visual con exageración vertical</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <script>
-        document.getElementById('nombreUsuarioActivo').innerText = sessionStorage.getItem('sesion_jhp_activa');
+        document.addEventListener("DOMContentLoaded", function() {
+            const user = sessionStorage.getItem('sesion_jhp_activa');
+            if(user) document.getElementById('nombreUsuarioActivo').innerText = user;
+            setTimeout(calcularCotaJHP, 100); 
+            setTimeout(calcularCotaSuperior, 100); 
+        });
+
         function cerrarSesion() { sessionStorage.removeItem('sesion_jhp_activa'); window.location.href = 'index.html'; }
-        function switchTab(tabId, btnId) { document.querySelectorAll('.form-card').forEach(c => c.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active', 'text-slate-900', 'bg-yellow-500'); b.classList.add('text-slate-500'); }); document.getElementById(tabId).classList.add('active'); document.getElementById(btnId).classList.add('active'); if(tabId === 'cota') calcularCotaJHP(); }
-        function descargarPDF(idContenedor) { const elementoOriginal = document.getElementById(idContenedor); let printContainer = document.getElementById('print-container') || document.createElement('div'); printContainer.id = 'print-container'; document.body.appendChild(printContainer); printContainer.innerHTML = elementoOriginal.innerHTML; document.body.classList.add('printing-mode'); window.print(); document.body.classList.remove('printing-mode'); printContainer.innerHTML = ''; }
         
+        function switchTab(tabId, btnId) {
+            document.querySelectorAll('.form-card').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active', 'text-slate-900', 'bg-yellow-500'); b.classList.add('text-slate-500'); });
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById(btnId).classList.add('active');
+            if(tabId === 'cota') calcularCotaJHP();
+            if(tabId === 'cota_sup') calcularCotaSuperior();
+        }
+
+        function descargarPDF(idContenedor) {
+            const elementoOriginal = document.getElementById(idContenedor);
+            let printContainer = document.getElementById('print-container') || document.createElement('div');
+            printContainer.id = 'print-container'; document.body.appendChild(printContainer);
+            printContainer.innerHTML = elementoOriginal.innerHTML;
+            document.body.classList.add('printing-mode'); window.print(); document.body.classList.remove('printing-mode'); printContainer.innerHTML = '';
+        }
+
+        // LÓGICA PENDIENTES Y ESCALERAS
         function calcularPendientes() { const ci=parseFloat(document.getElementById('p_cotaInst').value), c0=parseFloat(document.getElementById('p_cotaIni').value), c1=parseFloat(document.getElementById('p_cotaFin').value), dT=parseFloat(document.getElementById('p_distTotal').value), offset=parseFloat(document.getElementById('p_offset').value), inter=parseFloat(document.getElementById('p_inter').value); if(isNaN(ci)||isNaN(c0)||isNaN(c1)||isNaN(dT)) return; const desnivel=c1-c0, pendRel=desnivel/dT; document.getElementById('info-desnivel').innerText=desnivel.toFixed(3); document.getElementById('info-pendiente').innerText=(pendRel*100).toFixed(2); let html=`<table class="res-table"><thead><tr><th>Dist</th><th>Cota</th><th>Mira</th></tr></thead><tbody>`; for(let d=offset; d<dT; d+=inter) { let cp=c0+(d*pendRel); html+=`<tr><td>${d.toFixed(2)}</td><td>${cp.toFixed(3)}</td><td class="lectura-roja">${(ci-cp).toFixed(3)}</td></tr>`; } html+=`</tbody></table>`; document.getElementById('res-pendientes').innerHTML=html; document.getElementById('imprimir-pendientes').classList.remove('hidden'); document.getElementById('btn-pdf-pend').classList.remove('hidden'); }
         function calcularPasosJHP() { const cInf=parseFloat(document.getElementById('cotaInf').value), cSup=parseFloat(document.getElementById('cotaSup').value), n=parseInt(document.getElementById('pasos_n').value), cEst=parseFloat(document.getElementById('cotaEst').value); if(isNaN(cInf)||isNaN(cSup)||isNaN(n)) return; const difTotal=cSup-cInf, incBase=Math.floor((difTotal/n)*1000)/1000; let resMm=Math.round((difTotal-(incBase*n))*1000), cotaActual=cInf, html=`<table class="res-table">`; for(let i=1; i<=n; i++) { let inc=incBase; if(resMm>0){inc+=0.001; resMm--;} else if(resMm<0){inc-=0.001; resMm++;} cotaActual+=inc; html+=`<tr><td>Paso ${i}</td><td>${cotaActual.toFixed(3)}</td></tr>`; } document.getElementById('resultado-pasos').innerHTML=html+"</table>"; document.getElementById('imprimir-pasos').classList.remove('hidden'); document.getElementById('btn-pdf-pasos').classList.remove('hidden'); }
         
+        // LÓGICA CÁLCULO DE COTA (MÓDULO 3)
         let elementoActivo = "";
-        function foco(tipo) { elementoActivo = tipo; document.querySelectorAll('.active-label').forEach(e => e.classList.remove('active-label')); if(document.getElementById('lbl'+tipo.charAt(0).toUpperCase()+tipo.slice(1))) document.getElementById('lbl'+tipo.charAt(0).toUpperCase()+tipo.slice(1)).classList.add('active-label'); dibujarSeccionCota(); }
+        function foco(tipo) { elementoActivo = tipo; document.querySelectorAll('#cota .active-label').forEach(e => e.classList.remove('active-label')); if(document.getElementById('lbl'+tipo.charAt(0).toUpperCase()+tipo.slice(1))) document.getElementById('lbl'+tipo.charAt(0).toUpperCase()+tipo.slice(1)).classList.add('active-label'); dibujarSeccionCota(); }
         function calcularCotaJHP() { const ci = parseFloat(document.getElementById("cotaInicial").value), d = parseFloat(document.getElementById("distancia").value), p = parseFloat(document.getElementById("pendiente").value), s = document.getElementById("sentido").value; if(isNaN(ci)||isNaN(d)||isNaN(p)) return; let des = d*(p/100), cf = s==="positivo"?ci+des:ci-des; document.getElementById("resDesnivel").innerText=des.toFixed(3); document.getElementById("resCotaFinal").innerText=cf.toFixed(3); document.getElementById("cajaResultados").classList.remove("hidden"); document.getElementById("cajaResultados").classList.add("flex"); dibujarSeccionCota(); }
-        function dibujarSeccionCota() { const canvas=document.getElementById('canvasJHP'); if(!canvas)return; const ctx=canvas.getContext('2d'), cIni=parseFloat(document.getElementById("cotaInicial").value)||0, d=parseFloat(document.getElementById("distancia").value)||0, p=parseFloat(document.getElementById("pendiente").value)||0, s=document.getElementById("sentido").value; ctx.clearRect(0,0,canvas.width,canvas.height); let dy=p===0?0:90; dy*=s==="positivo"?-1:1; const x1=150, x2=canvas.width-120, y1=s==="positivo"?canvas.height-120:120, y2=y1+dy; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y1); ctx.lineTo(x2,y2); ctx.closePath(); ctx.lineWidth=2.5; ctx.strokeStyle="#475569"; ctx.stroke(); ctx.font="bold 14px Inter"; ctx.fillStyle="#0f172a"; ctx.textAlign="right"; ctx.fillText(`Cota Inicial: ${cIni.toFixed(2)}m`, x1-15, y1); ctx.textAlign="center"; ctx.fillText(`Cota Final: ${(s==="positivo"?cIni+(d*p/100):cIni-(d*p/100)).toFixed(2)}m`, x2, y2+(s==="positivo"?-20:20)); ctx.fillText(`Distancia: ${d}m`,(x1+x2)/2,y1+(s==="positivo"?25:-15)); }
-        setTimeout(calcularCotaJHP, 100);
+        function dibujarSeccionCota() { const canvas=document.getElementById('canvasJHP'); if(!canvas)return; const ctx=canvas.getContext('2d'), cIni=parseFloat(document.getElementById("cotaInicial").value)||0, d=parseFloat(document.getElementById("distancia").value)||0, p=parseFloat(document.getElementById("pendiente").value)||0, s=document.getElementById("sentido").value; ctx.clearRect(0,0,canvas.width,canvas.height); let dy=p===0?0:90; dy*=s==="positivo"?-1:1; const x1=150, x2=canvas.width-120, y1=s==="positivo"?canvas.height-120:120, y2=y1+dy; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y1); ctx.lineTo(x2,y2); ctx.closePath(); ctx.lineWidth=2.5; ctx.strokeStyle="#475569"; ctx.stroke(); if(p>0){ctx.beginPath(); let ang=Math.atan2(dy,x2-x1); if(s==="positivo"){ctx.arc(x1,y1,40,ang,0);}else{ctx.arc(x1,y1,40,0,ang);} ctx.strokeStyle="#0ea5e9"; ctx.stroke(); ctx.fillStyle="#334155"; ctx.font="italic 18px 'Playfair Display'"; ctx.fillText("α", x1+50, y1+(s==="positivo"?-10:20));} ctx.font="bold 14px Inter"; ctx.fillStyle=(elementoActivo==="cota")?"#eab308":"#0f172a"; ctx.textAlign="right"; ctx.textBaseline="middle"; ctx.fillText(`Cota Inicial: ${cIni.toFixed(2)}m`, x1-15, y1); ctx.fillStyle="#059669"; ctx.textAlign="center"; ctx.fillText(`Cota Final: ${(s==="positivo"?cIni+(d*p/100):cIni-(d*p/100)).toFixed(2)}m`, x2, y2+(s==="positivo"?-20:20)); ctx.fillStyle=(elementoActivo==="distancia")?"#eab308":"#475569"; ctx.fillText(`Distancia: ${d}m`,(x1+x2)/2,y1+(s==="positivo"?25:-15)); ctx.fillStyle="#475569"; ctx.textAlign="left"; ctx.fillText(`ΔH = ${(d*p/100).toFixed(2)}m`, x2+10, (y1+y2)/2); ctx.save(); ctx.translate((x1+x2)/2,(y1+y2)/2); ctx.rotate(Math.atan2(y2-y1,x2-x1)); ctx.fillStyle=(elementoActivo==="pendiente")?"#eab308":"#0f172a"; ctx.textAlign="center"; ctx.fillText(`Pendiente del ${p}%`,0,-15); ctx.restore(); }
+
+        // LÓGICA CÁLCULO DE COTA SUPERIOR (MÓDULO 4 - NUEVO)
+        let cs_elementoActivo = "";
+        function focoSup(tipo) { cs_elementoActivo = tipo; document.querySelectorAll('#cota_sup .active-label').forEach(e => e.classList.remove('active-label')); if(document.getElementById('cs_lbl'+tipo.charAt(0).toUpperCase()+tipo.slice(1))) document.getElementById('cs_lbl'+tipo.charAt(0).toUpperCase()+tipo.slice(1)).classList.add('active-label'); dibujarSup(); }
+        function calcularCotaSuperior() { const ci = parseFloat(document.getElementById("cs_cotaInicial").value), d = parseFloat(document.getElementById("cs_distancia").value), p = parseFloat(document.getElementById("cs_pendiente").value), s = document.getElementById("cs_sentido").value; if(isNaN(ci)||isNaN(d)||isNaN(p)) return; let des = d*(p/100), cf = s==="positivo"?ci+des:ci-des; document.getElementById("cs_resDesnivel").innerText=des.toFixed(3); document.getElementById("cs_resCotaFinal").innerText=cf.toFixed(3); document.getElementById("cs_cajaResultados").classList.remove("hidden"); document.getElementById("cs_cajaResultados").classList.add("flex"); dibujarSup(); }
+        function dibujarSup() { const canvas=document.getElementById('cs_canvasJHP'); if(!canvas)return; const ctx=canvas.getContext('2d'), cIni=parseFloat(document.getElementById("cs_cotaInicial").value)||0, d=parseFloat(document.getElementById("cs_distancia").value)||0, p=parseFloat(document.getElementById("cs_pendiente").value)||0, s=document.getElementById("cs_sentido").value; ctx.clearRect(0,0,canvas.width,canvas.height); let dy=p===0?0:90; dy*=s==="positivo"?-1:1; const x1=150, x2=canvas.width-120, y1=s==="positivo"?canvas.height-120:120, y2=y1+dy; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y1); ctx.lineTo(x2,y2); ctx.closePath(); ctx.lineWidth=2.5; ctx.strokeStyle="#475569"; ctx.stroke(); if(p>0){ctx.beginPath(); let ang=Math.atan2(dy,x2-x1); if(s==="positivo"){ctx.arc(x1,y1,40,ang,0);}else{ctx.arc(x1,y1,40,0,ang);} ctx.strokeStyle="#3b82f6"; ctx.stroke(); ctx.fillStyle="#334155"; ctx.font="italic 18px 'Playfair Display'"; ctx.fillText("α", x1+50, y1+(s==="positivo"?-10:20));} ctx.font="bold 14px Inter"; ctx.fillStyle=(cs_elementoActivo==="cota")?"#eab308":"#0f172a"; ctx.textAlign="right"; ctx.textBaseline="middle"; ctx.fillText(`Cota Inicial: ${cIni.toFixed(2)}m`, x1-15, y1); ctx.fillStyle="#2563eb"; ctx.textAlign="center"; ctx.fillText(`Cota Final: ${(s==="positivo"?cIni+(d*p/100):cIni-(d*p/100)).toFixed(2)}m`, x2, y2+(s==="positivo"?-20:20)); ctx.fillStyle=(cs_elementoActivo==="distancia")?"#eab308":"#475569"; ctx.fillText(`Distancia: ${d}m`,(x1+x2)/2,y1+(s==="positivo"?25:-15)); ctx.fillStyle="#475569"; ctx.textAlign="left"; ctx.fillText(`ΔH = ${(d*p/100).toFixed(2)}m`, x2+10, (y1+y2)/2); ctx.save(); ctx.translate((x1+x2)/2,(y1+y2)/2); ctx.rotate(Math.atan2(y2-y1,x2-x1)); ctx.fillStyle=(cs_elementoActivo==="pendiente")?"#eab308":"#0f172a"; ctx.textAlign="center"; ctx.fillText(`Pendiente del ${p}%`,0,-15); ctx.restore(); }
     </script>
 </body>
 </html>
