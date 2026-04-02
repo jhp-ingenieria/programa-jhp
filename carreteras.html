@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carreteras | JHP Datum</title>
+    <script>if (!sessionStorage.getItem('sesion_jhp_activa')) window.location.href = 'index.html';</script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05); }
+        .tab-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); } .tab-btn.active { background: #eab308; color: #0f172a; box-shadow: 0 10px 20px -5px rgba(234, 179, 8, 0.4); transform: translateY(-2px); }
+        .res-table { width: 100%; border-collapse: separate; border-radius: 1.5rem; overflow: hidden; } .res-table th { background-color: #0f172a; color: #f8fafc; padding: 1rem; text-transform: uppercase; font-size: 0.7rem; } .res-table td { padding: 1rem; border-bottom: 1px solid #e2e8f0; background: rgba(255,255,255,0.7); font-size: 0.9rem; } .lectura-roja { color: #ea580c; font-weight: 700; font-family: monospace; font-size: 1.1rem; }
+        .form-card { display: none; } .form-card.active { display: block; animation: fadeIn 0.5s ease-out forwards; } @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen p-4 md:p-8 block">
+        <div class="max-w-6xl mx-auto">
+            <header class="flex flex-col md:flex-row justify-between items-center gap-6 mb-8 bg-slate-900 p-8 rounded-[3rem] shadow-2xl relative overflow-hidden">
+                <div class="flex items-center gap-5 relative z-10">
+                    <div class="w-16 h-16 bg-yellow-500 rounded-[1.5rem] flex items-center justify-center shadow-2xl rotate-3"><i class="fas fa-road text-slate-900 text-2xl"></i></div>
+                    <div><h2 class="text-white font-black text-2xl italic uppercase tracking-wider">CARRETERAS</h2><p class="text-yellow-500 text-[10px] font-bold tracking-[0.3em]">Módulo Vial | <span id="nombreUsuarioActivo" class="text-white uppercase"></span></p></div>
+                </div>
+                <div class="flex gap-4 z-10"><button onclick="cerrarSesion()" class="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white px-8 py-3 rounded-2xl text-[10px] font-black tracking-[0.2em] transition-all border border-red-500/20"><i class="fas fa-power-off mr-2"></i> SALIR</button></div>
+            </header>
+
+            <div class="flex flex-wrap gap-3 mb-6">
+                <a href="edificaciones.html" class="bg-white text-slate-600 px-7 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all border border-slate-200"><i class="fas fa-building mr-2"></i> Edificaciones</a>
+                <a href="saneamiento.html" class="bg-white text-slate-600 px-7 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all border border-slate-200"><i class="fas fa-water mr-2"></i> Saneamiento</a>
+                <a href="carreteras.html" class="bg-slate-900 text-white px-7 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-lg transition-all"><i class="fas fa-road mr-2"></i> Carreteras</a>
+                <a href="lineas.html" class="bg-white text-slate-600 px-7 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all border border-slate-200"><i class="fas fa-bolt mr-2"></i> Líneas de Tensión</a>
+            </div>
+
+            <div class="flex flex-wrap gap-4 mb-8 bg-slate-200/40 p-3 rounded-[2rem] w-fit backdrop-blur-md">
+                <button id="btnTabDg" class="tab-btn active px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest" onclick="switchTab('dg2018', 'btnTabDg')">DG-2018</button>
+                <button id="btnTabCurvas" class="tab-btn px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-500" onclick="switchTab('curvas', 'btnTabCurvas')">CURVAS VERTICALES</button>
+            </div>
+
+            <div id="dg2018" class="form-card active glass-card rounded-[3rem] p-8 md:p-12 shadow-2xl">
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <div class="glass-card p-6 rounded-[2rem] border bg-white/50 flex flex-col">
+                        <h4 class="text-lg font-black text-slate-800 italic border-l-4 border-orange-500 pl-3 mb-4">1. Clasificación</h4>
+                        <div class="space-y-4 mb-6 flex-1">
+                            <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">IMDA</label><input type="number" id="dg_imda" class="w-full p-4 rounded-xl border font-bold"></div>
+                            <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Orografía</label><select id="dg_oro" class="w-full p-4 rounded-xl border font-bold"><option value="1">Tipo 1</option><option value="2">Tipo 2</option><option value="3">Tipo 3</option><option value="4">Tipo 4</option></select></div>
+                            <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Velocidad (km/h)</label><input type="number" id="dg_v_dis" class="w-full p-4 rounded-xl border font-bold"></div>
+                        </div>
+                        <button onclick="disenoFase1()" class="w-full bg-orange-500 text-white py-4 rounded-xl font-black uppercase">Calcular F1</button>
+                        <div id="res_fase1" class="hidden mt-4 p-4 bg-orange-50 rounded-xl border border-orange-100 text-sm font-medium"></div>
+                    </div>
+                    <div class="glass-card p-6 rounded-[2rem] border bg-white/50 flex flex-col">
+                        <h4 class="text-lg font-black text-slate-800 italic border-l-4 border-orange-500 pl-3 mb-4">2. Horizontal</h4>
+                        <div class="space-y-4 mb-6 flex-1">
+                            <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Ubicación</label><select id="dg_ubicacion" class="w-full p-4 rounded-xl border font-bold"><option value="0.08">Rural 8%</option><option value="0.12">Rural 12%</option><option value="0.06">Urbano 6%</option></select></div>
+                            <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Vehículo</label><select id="dg_vehiculo" class="w-full p-4 rounded-xl border font-bold"><option value="6.55">C2/B2</option><option value="10.50">B3-1</option><option value="12.19">WB-12</option></select></div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Radio</label><input type="number" id="dg_radio_p" class="w-full p-4 rounded-xl border font-bold"></div>
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Pendiente</label><input type="number" id="dg_pend_v" value="0" class="w-full p-4 rounded-xl border font-bold"></div>
+                            </div>
+                        </div>
+                        <button onclick="disenoFase2()" class="w-full bg-orange-500 text-white py-4 rounded-xl font-black uppercase">Calcular F2</button>
+                        <div id="res_fase2" class="hidden mt-4 p-4 bg-orange-50 rounded-xl border border-orange-100 text-sm font-medium"></div>
+                    </div>
+                    <div class="glass-card p-6 rounded-[2rem] border bg-white/50 flex flex-col">
+                        <h4 class="text-lg font-black text-slate-800 italic border-l-4 border-orange-500 pl-3 mb-4">3. Vertical</h4>
+                        <div class="space-y-4 mb-6 flex-1">
+                            <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Dif. Alg. A (%)</label><input type="number" id="dg_dif_a" class="w-full p-4 rounded-xl border font-bold"></div>
+                            <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Tipo Curva</label><select id="dg_tipo_v" class="w-full p-4 rounded-xl border font-bold"><option value="cresta">Convexa</option><option value="columpio">Cóncava</option></select></div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Suelo</label><select id="dg_mat_talud" class="w-full p-4 rounded-xl border font-bold"><option value="roca">Roca</option><option value="suelo">Común</option></select></div>
+                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">H Talud</label><input type="number" id="dg_h_talud" value="5" class="w-full p-4 rounded-xl border font-bold"></div>
+                            </div>
+                        </div>
+                        <button onclick="disenoFase3()" class="w-full bg-orange-500 text-white py-4 rounded-xl font-black uppercase">Calcular F3</button>
+                        <div id="res_fase3" class="hidden mt-4 p-4 bg-orange-50 rounded-xl border border-orange-100 text-sm font-medium"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="curvas" class="form-card glass-card rounded-[3rem] p-8 md:p-12 shadow-2xl">
+                <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">V. Diseño</label><select id="cv_velocidad" class="w-full p-4 rounded-xl border font-bold"><option value="40">40</option><option value="60" selected>60</option><option value="80">80</option><option value="100">100</option></select></div>
+                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Abscisa PIV</label><input type="number" id="cv_piv_abs" value="1000" class="w-full p-4 rounded-xl border font-bold"></div>
+                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Cota PIV</label><input type="number" id="cv_piv_cota" value="2500" class="w-full p-4 rounded-xl border font-bold"></div>
+                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Longitud L</label><input type="number" id="cv_L" value="100" class="w-full p-4 rounded-xl border font-bold"></div>
+                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Entrada g1 (%)</label><input type="number" id="cv_g1" value="4.0" step="0.1" class="w-full p-4 rounded-xl border font-bold"></div>
+                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Salida g2 (%)</label><input type="number" id="cv_g2" value="-2.0" step="0.1" class="w-full p-4 rounded-xl border font-bold"></div>
+                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Intervalo</label><input type="number" id="cv_intervalo" value="10" class="w-full p-4 rounded-xl border font-bold"></div>
+                    <div class="col-span-full mt-2"><button onclick="procesarTodoCV()" class="w-full bg-slate-900 text-orange-500 py-5 rounded-2xl font-black uppercase">Procesar Diseño</button></div>
+                </div>
+                <div id="alerta-cv" class="hidden p-5 rounded-2xl font-bold mt-6 text-center border"></div>
+                <div class="w-full bg-white p-4 rounded-[2rem] shadow-inner mt-8 border border-slate-100 relative h-80 hidden" id="contenedorGraficoCV"><canvas id="graficoCurva"></canvas></div>
+                <div id="seccionTablaCV" class="hidden mt-8">
+                    <button onclick="descargarCSV()" class="mb-4 bg-green-600 text-white px-6 py-3 rounded-xl font-bold uppercase text-xs">Exportar Excel</button>
+                    <div class="overflow-x-auto rounded-[2rem] border border-slate-100">
+                        <table class="res-table w-full"><thead><tr><th>Punto</th><th>Abscisa</th><th>Dist. x</th><th>Cota Tangente</th><th>Corrección</th><th>Cota Rasante</th></tr></thead><tbody id="cuerpoTablaCV"></tbody></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('nombreUsuarioActivo').innerText = sessionStorage.getItem('sesion_jhp_activa');
+        function cerrarSesion() { sessionStorage.removeItem('sesion_jhp_activa'); window.location.href = 'index.html'; }
+        function switchTab(tabId, btnId) { document.querySelectorAll('.form-card').forEach(c => c.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active', 'text-slate-900', 'bg-yellow-500'); b.classList.add('text-slate-500'); }); document.getElementById(tabId).classList.add('active'); document.getElementById(btnId).classList.add('active'); }
+        function disenoFase1() { const imda=parseInt(document.getElementById('dg_imda').value), oro=parseInt(document.getElementById('dg_oro').value); if(isNaN(imda))return; let c="", a=0, b="2.5%"; if(imda>6000){c="Autopista 1ra";a=7.20;}else if(imda>=4001){c="Autopista 2da";a=7.20;}else if(imda>=2001){c="Carretera 1ra";a=7.20;}else if(imda>=400){c="Carretera 2da";a=oro>2?6.6:7.2;}else{c="Carretera 3ra";a=oro>2?6.0:6.6;b="2.0% - 3.0%";} document.getElementById('res_fase1').innerHTML=`<b>Jerarquía:</b> ${c}<br><b>Ancho:</b> ${a.toFixed(2)}m<br><b>Bombeo:</b> ${b}`; document.getElementById('res_fase1').classList.remove('hidden'); document.getElementById('res_fase1').classList.add('block'); }
+        function disenoFase2() { const v=parseFloat(document.getElementById('dg_v_dis').value), e=parseFloat(document.getElementById('dg_ubicacion').value), r=parseFloat(document.getElementById('dg_radio_p').value), l=parseFloat(document.getElementById('dg_vehiculo').value); if(isNaN(v)||isNaN(r))return; const f=0.18-(v/1000), rM=Math.ceil((v**2)/(127*(e+f))); let sa=0; if(r)sa=2*(r-Math.sqrt(r**2-l**2))+(v/(10*Math.sqrt(r))); const dp=(0.278*v*2.5)+(v**2/(254*0.35)); document.getElementById('res_fase2').innerHTML=`<b>R. Mínimo:</b> ${rM}m<br><b>Sobreancho:</b> ${sa.toFixed(2)}m<br><b>Visibilidad (Dp):</b> ${dp.toFixed(2)}m`; document.getElementById('res_fase2').classList.remove('hidden'); document.getElementById('res_fase2').classList.add('block'); }
+        function disenoFase3() { const a=Math.abs(parseFloat(document.getElementById('dg_dif_a').value)), v=parseFloat(document.getElementById('dg_v_dis').value), t=document.getElementById('dg_tipo_v').value, h=parseFloat(document.getElementById('dg_h_talud').value), m=document.getElementById('dg_mat_talud').value; if(isNaN(v)||isNaN(a))return; const k=t==="cresta"?(v**2/400):(v**2/250), lM=k*a, tl=m==="roca"?"1:4 a 1:10":"1:1 (45°)", bq=h>7?"Requiere (3m)":"No obligatoria"; document.getElementById('res_fase3').innerHTML=`<b>L. Mínima:</b> ${lM.toFixed(2)}m (K=${k.toFixed(1)})<br><b>Talud:</b> ${tl}<br><b>Banqueta:</b> ${bq}`; document.getElementById('res_fase3').classList.remove('hidden'); document.getElementById('res_fase3').classList.add('block'); }
+        let chartInstanceCV; let datosParaCSV=[];
+        function procesarTodoCV() { const v=document.getElementById('cv_velocidad').value, g1=parseFloat(document.getElementById('cv_g1').value), g2=parseFloat(document.getElementById('cv_g2').value), L=parseFloat(document.getElementById('cv_L').value), iv=parseFloat(document.getElementById('cv_intervalo').value), pA=parseFloat(document.getElementById('cv_piv_abs').value), pC=parseFloat(document.getElementById('cv_piv_cota').value); if(isNaN(g1)||isNaN(g2)||isNaN(L)||isNaN(iv))return; const A=Math.abs(g1-g2), Ka=L/A, t=g1>g2?"convexa":"concava", Km={"40":{convexa:4,concava:9},"60":{convexa:11,concava:18},"80":{convexa:26,concava:30},"100":{convexa:52,concava:45}}[v][t]; const al=document.getElementById('alerta-cv'); al.classList.remove('hidden'); if(Ka<Km){al.className='p-5 rounded-2xl font-bold mt-6 text-center border bg-red-50 text-red-600 block'; al.innerHTML=`⚠️ PELIGRO: K=${Ka.toFixed(2)} (Mínimo: ${Km}).`;}else{al.className='p-5 rounded-2xl font-bold mt-6 text-center border bg-green-50 text-green-700 block'; al.innerHTML=`✅ DISEÑO SEGURO: K=${Ka.toFixed(2)}`;} const pcA=pA-L/2, pcC=pC-(g1/100*L/2), cb=document.getElementById('cuerpoTablaCV'); cb.innerHTML=""; datosParaCSV=[["Punto","Abscisa","Dist","CotaTan","Correc","CotaRas"]]; let lb=[], ry=[], ty=[]; for(let x=0;x<=L;x+=iv){let ax=pcA+x, ct=pcC+(g1/100*x), cy=((g2-g1)/(200*L))*Math.pow(x,2), cr=ct+cy, n=(x===0)?"PCV":(x>=L?"PTV":(x===L/2?"PIV":"Punto")); cb.innerHTML+=`<tr><td>${n}</td><td>${ax.toFixed(2)}</td><td>${x.toFixed(2)}</td><td>${ct.toFixed(3)}</td><td>${cy.toFixed(3)}</td><td class="lectura-roja">${cr.toFixed(3)}</td></tr>`; datosParaCSV.push([n,ax.toFixed(2),x.toFixed(2),ct.toFixed(3),cy.toFixed(3),cr.toFixed(3)]); lb.push(ax.toFixed(0)); ry.push(cr.toFixed(3)); ty.push(ct.toFixed(3)); } document.getElementById('seccionTablaCV').classList.remove('hidden'); document.getElementById('contenedorGraficoCV').classList.remove('hidden'); const ctx=document.getElementById('graficoCurva').getContext('2d'); if(chartInstanceCV)chartInstanceCV.destroy(); chartInstanceCV=new Chart(ctx,{type:'line',data:{labels:lb,datasets:[{label:'Rasante',data:ry,borderColor:'#ea580c',borderWidth:3,tension:0.4,fill:false},{label:'Tangente',data:ty,borderColor:'#94a3b8',borderDash:[5,5],borderWidth:2,fill:false}]},options:{responsive:true,maintainAspectRatio:false}}); }
+        function descargarCSV() { let csv="data:text/csv;charset=utf-8,"+datosParaCSV.map(e=>e.join(",")).join("\n"); let l=document.createElement("a"); l.setAttribute("href",encodeURI(csv)); l.setAttribute("download","curva_vertical.csv"); document.body.appendChild(l); l.click(); document.body.removeChild(l); }
+    </script>
+</body>
+</html>
