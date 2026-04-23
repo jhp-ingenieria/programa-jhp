@@ -38,6 +38,7 @@
             <div class="flex flex-wrap gap-4 mb-8 bg-slate-200/40 p-3 rounded-[2rem] w-fit backdrop-blur-md">
                 <button id="btnTabDg" class="tab-btn active px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest" onclick="switchTab('dg2018', 'btnTabDg')">DG-2018</button>
                 <button id="btnTabCurvas" class="tab-btn px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-500" onclick="switchTab('curvas', 'btnTabCurvas')">CURVAS VERTICALES</button>
+                <button id="btnTabSeccion" class="tab-btn px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-indigo-500 bg-indigo-50 border border-indigo-200" onclick="switchTab('seccion_csv', 'btnTabSeccion')"><i class="fas fa-file-csv mr-2"></i> REPLANTEO SECCIÓN</button>
             </div>
 
             <div id="dg2018" class="form-card active glass-card rounded-[3rem] p-8 md:p-12 shadow-2xl">
@@ -101,18 +102,386 @@
                     </div>
                 </div>
             </div>
+
+            <div id="seccion_csv" class="form-card glass-card rounded-[3rem] p-8 md:p-12 shadow-2xl">
+                <div class="mb-8 text-center">
+                    <h3 class="text-3xl font-black text-slate-800 italic uppercase mb-2">Replanteo Transversal Inteligente</h3>
+                    <p class="text-slate-500 font-medium">Extrae datos directo del CSV para dibujar la sección y calcular las miras topográficas.</p>
+                </div>
+
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <div class="glass-card p-6 rounded-[2rem] border bg-white/50 flex flex-col space-y-6">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2"><i class="fas fa-upload text-indigo-500 mr-1"></i> 1. Cargar CSV (Sub-Base/Base)</label>
+                            <input type="file" accept=".csv" id="csvFileInput" onchange="leerArchivoCSV(event)" class="w-full p-2 rounded-xl border text-sm font-bold file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2"><i class="fas fa-map-marker-alt text-indigo-500 mr-1"></i> 2. Seleccionar Progresiva</label>
+                            <select id="sec_progresiva" onchange="dibujarSeccionInteractiva()" class="w-full p-4 rounded-xl border font-black bg-white text-indigo-700 outline-none focus:ring-4 focus:ring-indigo-500/20 cursor-pointer appearance-none">
+                                <option value="">[Cargue un archivo primero]</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2"><i class="fas fa-tripod text-indigo-500 mr-1"></i> 3. Cota Instrumento</label>
+                            <input type="number" id="sec_cotaInst" step="0.001" oninput="dibujarSeccionInteractiva()" placeholder="Ingrese Cota de Estación..." class="w-full p-4 rounded-xl border font-bold text-slate-800 outline-none focus:ring-4 focus:ring-indigo-500/20">
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2 glass-card p-6 rounded-[2rem] border bg-indigo-50/30 flex flex-col justify-center shadow-inner">
+                         <div class="grid grid-cols-3 gap-3 md:gap-6 text-center">
+                              <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+                                   <div class="absolute top-0 left-0 w-full h-1 bg-slate-300"></div>
+                                   <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Cota Borde Izq.</p>
+                                   <p class="text-2xl md:text-3xl font-black text-slate-800" id="lbl_cotaIzq">0.000</p>
+                                   <div class="mt-3 pt-3 border-t border-slate-100">
+                                       <p class="text-[10px] font-black text-slate-400 uppercase">Lectura Mira</p>
+                                       <p class="text-lg font-black text-red-500" id="lbl_miraIzq">-</p>
+                                   </div>
+                              </div>
+                              <div class="bg-white p-4 md:p-6 rounded-2xl shadow-md border border-indigo-200 ring-2 ring-indigo-500/20 relative overflow-hidden scale-105 z-10">
+                                   <div class="absolute top-0 left-0 w-full h-2 bg-indigo-500"></div>
+                                   <p class="text-[11px] font-black text-indigo-500 uppercase tracking-widest mb-1 mt-1">CT EJE</p>
+                                   <p class="text-3xl md:text-4xl font-black text-indigo-700" id="lbl_cotaEje">0.000</p>
+                                   <div class="mt-3 pt-3 border-t border-indigo-50">
+                                       <p class="text-[10px] font-black text-indigo-400 uppercase">Lectura Mira</p>
+                                       <p class="text-xl font-black text-red-600" id="lbl_miraEje">-</p>
+                                   </div>
+                              </div>
+                              <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+                                   <div class="absolute top-0 left-0 w-full h-1 bg-slate-300"></div>
+                                   <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Cota Borde Der.</p>
+                                   <p class="text-2xl md:text-3xl font-black text-slate-800" id="lbl_cotaDer">0.000</p>
+                                   <div class="mt-3 pt-3 border-t border-slate-100">
+                                       <p class="text-[10px] font-black text-slate-400 uppercase">Lectura Mira</p>
+                                       <p class="text-lg font-black text-red-500" id="lbl_miraDer">-</p>
+                                   </div>
+                              </div>
+                         </div>
+                         <div class="mt-6 flex justify-around px-4 text-xs font-bold text-slate-500 bg-white py-3 rounded-xl border border-slate-100">
+                              <span><i class="fas fa-arrows-alt-h mr-1 text-slate-300"></i> Ancho Total Izq: <span id="lbl_anchoIzq" class="text-slate-800">0.00m</span></span>
+                              <span class="w-px bg-slate-200"></span>
+                              <span><i class="fas fa-arrows-alt-h mr-1 text-slate-300"></i> Ancho Total Der: <span id="lbl_anchoDer" class="text-slate-800">0.00m</span></span>
+                         </div>
+                    </div>
+                </div>
+
+                <div class="w-full bg-white p-6 rounded-[2rem] shadow-sm mt-8 border border-slate-200 flex flex-col">
+                     <h4 class="text-sm font-black text-slate-400 uppercase italic mb-4 tracking-widest text-center">Vista Topográfica (Corte Transversal)</h4>
+                     <div class="w-full relative h-[400px]">
+                         <canvas id="canvasSeccion" class="absolute inset-0 w-full h-full bg-slate-50 rounded-[1.5rem]"></canvas>
+                     </div>
+                </div>
+            </div>
+
         </div>
     </div>
+
     <script>
-        document.getElementById('nombreUsuarioActivo').innerText = sessionStorage.getItem('sesion_jhp_activa');
+        document.addEventListener("DOMContentLoaded", function() {
+            const user = sessionStorage.getItem('sesion_jhp_activa');
+            if(user) document.getElementById('nombreUsuarioActivo').innerText = user;
+            
+            // Redibujar si cambia el tamaño de la ventana
+            window.addEventListener('resize', dibujarSeccionInteractiva);
+        });
+
         function cerrarSesion() { sessionStorage.removeItem('sesion_jhp_activa'); window.location.href = 'index.html'; }
-        function switchTab(tabId, btnId) { document.querySelectorAll('.form-card').forEach(c => c.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active', 'text-slate-900', 'bg-yellow-500'); b.classList.add('text-slate-500'); }); document.getElementById(tabId).classList.add('active'); document.getElementById(btnId).classList.add('active'); }
+        
+        function switchTab(tabId, btnId) { 
+            document.querySelectorAll('.form-card').forEach(c => c.classList.remove('active')); 
+            document.querySelectorAll('.tab-btn').forEach(b => { 
+                b.classList.remove('active', 'text-slate-900', 'bg-yellow-500', 'text-indigo-500', 'bg-indigo-50', 'border-indigo-200'); 
+                b.classList.add('text-slate-500'); 
+                b.style.border = "none";
+            }); 
+            document.getElementById(tabId).classList.add('active'); 
+            const activeBtn = document.getElementById(btnId);
+            
+            if(tabId === 'seccion_csv') {
+                activeBtn.classList.add('active', 'text-indigo-700', 'bg-indigo-50');
+                activeBtn.style.border = "1px solid #c7d2fe";
+                setTimeout(dibujarSeccionInteractiva, 100);
+            } else {
+                activeBtn.classList.add('active', 'text-slate-900', 'bg-yellow-500');
+            }
+        }
+
+        // ==============================================
+        // LÓGICA EXISTENTE: DG-2018 Y CURVAS
+        // ==============================================
         function disenoFase1() { const imda=parseInt(document.getElementById('dg_imda').value), oro=parseInt(document.getElementById('dg_oro').value); if(isNaN(imda))return; let c="", a=0, b="2.5%"; if(imda>6000){c="Autopista 1ra";a=7.20;}else if(imda>=4001){c="Autopista 2da";a=7.20;}else if(imda>=2001){c="Carretera 1ra";a=7.20;}else if(imda>=400){c="Carretera 2da";a=oro>2?6.6:7.2;}else{c="Carretera 3ra";a=oro>2?6.0:6.6;b="2.0% - 3.0%";} document.getElementById('res_fase1').innerHTML=`<b>Jerarquía:</b> ${c}<br><b>Ancho:</b> ${a.toFixed(2)}m<br><b>Bombeo:</b> ${b}`; document.getElementById('res_fase1').classList.remove('hidden'); document.getElementById('res_fase1').classList.add('block'); }
         function disenoFase2() { const v=parseFloat(document.getElementById('dg_v_dis').value), e=parseFloat(document.getElementById('dg_ubicacion').value), r=parseFloat(document.getElementById('dg_radio_p').value), l=parseFloat(document.getElementById('dg_vehiculo').value); if(isNaN(v)||isNaN(r))return; const f=0.18-(v/1000), rM=Math.ceil((v**2)/(127*(e+f))); let sa=0; if(r)sa=2*(r-Math.sqrt(r**2-l**2))+(v/(10*Math.sqrt(r))); const dp=(0.278*v*2.5)+(v**2/(254*0.35)); document.getElementById('res_fase2').innerHTML=`<b>R. Mínimo:</b> ${rM}m<br><b>Sobreancho:</b> ${sa.toFixed(2)}m<br><b>Visibilidad (Dp):</b> ${dp.toFixed(2)}m`; document.getElementById('res_fase2').classList.remove('hidden'); document.getElementById('res_fase2').classList.add('block'); }
         function disenoFase3() { const a=Math.abs(parseFloat(document.getElementById('dg_dif_a').value)), v=parseFloat(document.getElementById('dg_v_dis').value), t=document.getElementById('dg_tipo_v').value, h=parseFloat(document.getElementById('dg_h_talud').value), m=document.getElementById('dg_mat_talud').value; if(isNaN(v)||isNaN(a))return; const k=t==="cresta"?(v**2/400):(v**2/250), lM=k*a, tl=m==="roca"?"1:4 a 1:10":"1:1 (45°)", bq=h>7?"Requiere (3m)":"No obligatoria"; document.getElementById('res_fase3').innerHTML=`<b>L. Mínima:</b> ${lM.toFixed(2)}m (K=${k.toFixed(1)})<br><b>Talud:</b> ${tl}<br><b>Banqueta:</b> ${bq}`; document.getElementById('res_fase3').classList.remove('hidden'); document.getElementById('res_fase3').classList.add('block'); }
+        
         let chartInstanceCV; let datosParaCSV=[];
         function procesarTodoCV() { const v=document.getElementById('cv_velocidad').value, g1=parseFloat(document.getElementById('cv_g1').value), g2=parseFloat(document.getElementById('cv_g2').value), L=parseFloat(document.getElementById('cv_L').value), iv=parseFloat(document.getElementById('cv_intervalo').value), pA=parseFloat(document.getElementById('cv_piv_abs').value), pC=parseFloat(document.getElementById('cv_piv_cota').value); if(isNaN(g1)||isNaN(g2)||isNaN(L)||isNaN(iv))return; const A=Math.abs(g1-g2), Ka=L/A, t=g1>g2?"convexa":"concava", Km={"40":{convexa:4,concava:9},"60":{convexa:11,concava:18},"80":{convexa:26,concava:30},"100":{convexa:52,concava:45}}[v][t]; const al=document.getElementById('alerta-cv'); al.classList.remove('hidden'); if(Ka<Km){al.className='p-5 rounded-2xl font-bold mt-6 text-center border bg-red-50 text-red-600 block'; al.innerHTML=`⚠️ PELIGRO: K=${Ka.toFixed(2)} (Mínimo: ${Km}).`;}else{al.className='p-5 rounded-2xl font-bold mt-6 text-center border bg-green-50 text-green-700 block'; al.innerHTML=`✅ DISEÑO SEGURO: K=${Ka.toFixed(2)}`;} const pcA=pA-L/2, pcC=pC-(g1/100*L/2), cb=document.getElementById('cuerpoTablaCV'); cb.innerHTML=""; datosParaCSV=[["Punto","Abscisa","Dist","CotaTan","Correc","CotaRas"]]; let lb=[], ry=[], ty=[]; for(let x=0;x<=L;x+=iv){let ax=pcA+x, ct=pcC+(g1/100*x), cy=((g2-g1)/(200*L))*Math.pow(x,2), cr=ct+cy, n=(x===0)?"PCV":(x>=L?"PTV":(x===L/2?"PIV":"Punto")); cb.innerHTML+=`<tr><td>${n}</td><td>${ax.toFixed(2)}</td><td>${x.toFixed(2)}</td><td>${ct.toFixed(3)}</td><td>${cy.toFixed(3)}</td><td class="lectura-roja">${cr.toFixed(3)}</td></tr>`; datosParaCSV.push([n,ax.toFixed(2),x.toFixed(2),ct.toFixed(3),cy.toFixed(3),cr.toFixed(3)]); lb.push(ax.toFixed(0)); ry.push(cr.toFixed(3)); ty.push(ct.toFixed(3)); } document.getElementById('seccionTablaCV').classList.remove('hidden'); document.getElementById('contenedorGraficoCV').classList.remove('hidden'); const ctx=document.getElementById('graficoCurva').getContext('2d'); if(chartInstanceCV)chartInstanceCV.destroy(); chartInstanceCV=new Chart(ctx,{type:'line',data:{labels:lb,datasets:[{label:'Rasante',data:ry,borderColor:'#ea580c',borderWidth:3,tension:0.4,fill:false},{label:'Tangente',data:ty,borderColor:'#94a3b8',borderDash:[5,5],borderWidth:2,fill:false}]},options:{responsive:true,maintainAspectRatio:false}}); }
         function descargarCSV() { let csv="data:text/csv;charset=utf-8,"+datosParaCSV.map(e=>e.join(",")).join("\n"); let l=document.createElement("a"); l.setAttribute("href",encodeURI(csv)); l.setAttribute("download","curva_vertical.csv"); document.body.appendChild(l); l.click(); document.body.removeChild(l); }
+
+        // ==============================================
+        // NUEVA LÓGICA: REPLANTEO DE SECCIÓN DESDE CSV
+        // ==============================================
+        let baseDatosCSV = [];
+
+        function leerArchivoCSV(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const texto = e.target.result;
+                const lineas = texto.split(/\r?\n/);
+                
+                // Buscar la fila de cabeceras que empieza con "PROGRESIVA"
+                let filaInicio = -1;
+                for(let i=0; i<lineas.length; i++) {
+                    if(lineas[i].toUpperCase().startsWith("PROGRESIVA")) {
+                        filaInicio = i + 1; // Los datos empiezan en la siguiente línea
+                        break;
+                    }
+                }
+
+                if(filaInicio === -1) {
+                    alert("Formato Inválido: No se encontró la columna 'PROGRESIVA' en el archivo CSV.");
+                    return;
+                }
+
+                baseDatosCSV = [];
+                const selectMenu = document.getElementById("sec_progresiva");
+                selectMenu.innerHTML = '<option value="">[Seleccione una Progresiva]</option>';
+
+                // Recorrer filas de datos y extraer columnas exactas
+                for(let i = filaInicio; i < lineas.length; i++) {
+                    const columnas = lineas[i].split(";");
+                    
+                    // Si la fila está vacía o no tiene suficientes columnas, saltar
+                    if(columnas.length < 14 || !columnas[0].trim()) continue;
+
+                    // Mapeo según el formato entregado por el usuario
+                    const progDatos = {
+                        progresiva: columnas[0].trim(),
+                        cotaIzqTot: parseFloat(columnas[1]) || 0,
+                        wTotIzq: parseFloat(columnas[2]) || 0,
+                        wTipoIzq: parseFloat(columnas[3]) || 0,
+                        bermaIzq: parseFloat(columnas[4]) || 0,
+                        peralteIzq: parseFloat(columnas[6]) || 0,
+                        
+                        ctEje: parseFloat(columnas[7]) || 0,
+                        
+                        peralteDer: parseFloat(columnas[8]) || 0,
+                        bermaDer: parseFloat(columnas[10]) || 0,
+                        wTipoDer: parseFloat(columnas[11]) || 0,
+                        wTotDer: parseFloat(columnas[12]) || 0,
+                        cotaDerTot: parseFloat(columnas[13]) || 0
+                    };
+
+                    baseDatosCSV.push(progDatos);
+                    
+                    // Agregar al desplegable
+                    const option = document.createElement("option");
+                    option.value = baseDatosCSV.length - 1; // Guardamos el índice
+                    option.textContent = "KM " + progDatos.progresiva;
+                    selectMenu.appendChild(option);
+                }
+
+                // Seleccionar automáticamente el primero si hay datos
+                if(baseDatosCSV.length > 0) {
+                    selectMenu.value = 0;
+                    dibujarSeccionInteractiva();
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function dibujarSeccionInteractiva() {
+            const selectIndex = document.getElementById("sec_progresiva").value;
+            const cInst = parseFloat(document.getElementById("sec_cotaInst").value);
+            
+            // Si no hay datos seleccionados, no hacer nada
+            if(selectIndex === "") return;
+            
+            const data = baseDatosCSV[selectIndex];
+            
+            // 1. Actualizar Textos Numéricos en el Dashboard
+            document.getElementById("lbl_cotaEje").innerText = data.ctEje.toFixed(3);
+            document.getElementById("lbl_cotaIzq").innerText = data.cotaIzqTot.toFixed(3);
+            document.getElementById("lbl_cotaDer").innerText = data.cotaDerTot.toFixed(3);
+            
+            document.getElementById("lbl_anchoIzq").innerText = data.wTotIzq.toFixed(2) + "m";
+            document.getElementById("lbl_anchoDer").innerText = data.wTotDer.toFixed(2) + "m";
+
+            // 2. Calcular Lecturas (Miras) si hay equipo estacionado
+            if(!isNaN(cInst)) {
+                document.getElementById("lbl_miraEje").innerText = (cInst - data.ctEje).toFixed(3);
+                document.getElementById("lbl_miraIzq").innerText = (cInst - data.cotaIzqTot).toFixed(3);
+                document.getElementById("lbl_miraDer").innerText = (cInst - data.cotaDerTot).toFixed(3);
+            } else {
+                document.getElementById("lbl_miraEje").innerText = "-";
+                document.getElementById("lbl_miraIzq").innerText = "-";
+                document.getElementById("lbl_miraDer").innerText = "-";
+            }
+
+            // 3. Dibujar en Canvas
+            const canvas = document.getElementById("canvasSeccion");
+            if(!canvas) return;
+            
+            // Ajustar resolución del canvas al div contenedor
+            canvas.width = canvas.parentElement.offsetWidth;
+            canvas.height = canvas.parentElement.offsetHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+
+            // Cálculos de geometría (Cotas intermedias de carril)
+            // Si el peralte es negativo, automáticamente resta (baja la cota)
+            const cotaCarrilIzq = data.ctEje + (data.wTipoIzq * data.peralteIzq / 100);
+            const cotaCarrilDer = data.ctEje + (data.wTipoDer * data.peralteDer / 100);
+
+            // Calcular escala Y
+            const cotasEvaluadas = [data.ctEje, data.cotaIzqTot, data.cotaDerTot, cotaCarrilIzq, cotaCarrilDer];
+            if(!isNaN(cInst)) cotasEvaluadas.push(cInst);
+            
+            const minY = Math.min(...cotasEvaluadas) - 0.5;
+            const maxY = Math.max(...cotasEvaluadas) + 0.5;
+            const rangeY = (maxY - minY) || 1;
+
+            // Calcular escala X
+            const maxW = Math.max(data.wTotIzq, data.wTotDer) + 1;
+            const margenX = 60;
+            const margenY = 60;
+
+            // Funciones de mapeo (Real a Canvas Píxeles)
+            // Y está invertido (0 arriba, height abajo)
+            const getX = (realX) => (canvas.width / 2) + (realX / maxW) * ((canvas.width / 2) - margenX);
+            const getY = (realY) => canvas.height - margenY - ((realY - minY) / rangeY) * (canvas.height - 2 * margenY);
+
+            // ------------------ DIBUJO DE ELEMENTOS ------------------
+
+            // A. Fondo Terreno (Relleno Verde)
+            ctx.beginPath();
+            ctx.moveTo(getX(-data.wTotIzq), getY(data.cotaIzqTot));
+            ctx.lineTo(getX(-data.wTipoIzq), getY(cotaCarrilIzq));
+            ctx.lineTo(getX(0), getY(data.ctEje));
+            ctx.lineTo(getX(data.wTipoDer), getY(cotaCarrilDer));
+            ctx.lineTo(getX(data.wTotDer), getY(data.cotaDerTot));
+            ctx.lineTo(getX(data.wTotDer), canvas.height);
+            ctx.lineTo(getX(-data.wTotIzq), canvas.height);
+            ctx.closePath();
+            ctx.fillStyle = "rgba(16, 185, 129, 0.15)";
+            ctx.fill();
+
+            // B. Línea de Superficie (Negra Gruesa)
+            ctx.beginPath();
+            ctx.moveTo(getX(-data.wTotIzq), getY(data.cotaIzqTot));
+            ctx.lineTo(getX(-data.wTipoIzq), getY(cotaCarrilIzq));
+            ctx.lineTo(getX(0), getY(data.ctEje));
+            ctx.lineTo(getX(data.wTipoDer), getY(cotaCarrilDer));
+            ctx.lineTo(getX(data.wTotDer), getY(data.cotaDerTot));
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = "#1e293b";
+            ctx.stroke();
+
+            // C. Línea Central (EJE - Azul Punteada)
+            ctx.beginPath();
+            ctx.moveTo(getX(0), 20);
+            ctx.lineTo(getX(0), canvas.height - 20);
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = "#818cf8";
+            ctx.setLineDash([6, 6]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Etiqueta EJE inferior
+            ctx.fillStyle = "#4f46e5";
+            ctx.font = "900 12px Inter";
+            ctx.textAlign = "center";
+            ctx.fillText("EJE", getX(0), canvas.height - 5);
+
+            // D. Instrumento Topográfico (Línea Visual y Miras)
+            if(!isNaN(cInst) && cInst >= minY) {
+                const yInst = getY(cInst);
+                
+                // Línea visual horizontal
+                ctx.beginPath();
+                ctx.moveTo(30, yInst);
+                ctx.lineTo(canvas.width - 30, yInst);
+                ctx.strokeStyle = "#ef4444"; // Rojo vibrante
+                ctx.setLineDash([10, 5]);
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                ctx.fillStyle = "#ef4444";
+                ctx.textAlign = "left";
+                ctx.font = "bold 11px Inter";
+                ctx.fillText("Línea Visual Equipo: " + cInst.toFixed(3), 30, yInst - 8);
+
+                // Dibujar Mira Izquierda (En Ancho Total)
+                _dibujarMiraGrafica(ctx, getX(-data.wTotIzq), getY(data.cotaIzqTot), yInst, (cInst - data.cotaIzqTot));
+                
+                // Dibujar Mira EJE
+                _dibujarMiraGrafica(ctx, getX(0), getY(data.ctEje), yInst, (cInst - data.ctEje));
+                
+                // Dibujar Mira Derecha (En Ancho Total)
+                _dibujarMiraGrafica(ctx, getX(data.wTotDer), getY(data.cotaDerTot), yInst, (cInst - data.cotaDerTot));
+            }
+
+            // E. Textos de Referencia (Anchos y Peraltes)
+            ctx.fillStyle = "#334155";
+            ctx.font = "bold 11px Inter";
+            ctx.textAlign = "center";
+            
+            // Carril Izquierdo
+            ctx.fillText(`Carril: ${data.wTipoIzq.toFixed(2)}m`, getX(-data.wTipoIzq/2), getY(data.ctEje) + 30);
+            ctx.fillStyle = data.peralteIzq < 0 ? "#ef4444" : "#10b981"; // Rojo si baja, verde si sube
+            ctx.fillText(`${data.peralteIzq}%`, getX(-data.wTipoIzq/2), getY(data.ctEje) + 45);
+
+            // Carril Derecho
+            ctx.fillStyle = "#334155";
+            ctx.fillText(`Carril: ${data.wTipoDer.toFixed(2)}m`, getX(data.wTipoDer/2), getY(data.ctEje) + 30);
+            ctx.fillStyle = data.peralteDer < 0 ? "#ef4444" : "#10b981"; 
+            ctx.fillText(`${data.peralteDer}%`, getX(data.wTipoDer/2), getY(data.ctEje) + 45);
+
+            // Bermas (si existen)
+            if(data.bermaIzq > 0) {
+                const midBermaIzq = (-data.wTotIzq - data.wTipoIzq) / 2;
+                ctx.fillStyle = "#64748b";
+                ctx.fillText(`B: ${data.bermaIzq}m`, getX(midBermaIzq), getY(data.cotaIzqTot) - 10);
+            }
+            if(data.bermaDer > 0) {
+                const midBermaDer = (data.wTotDer + data.wTipoDer) / 2;
+                ctx.fillStyle = "#64748b";
+                ctx.fillText(`B: ${data.bermaDer}m`, getX(midBermaDer), getY(data.cotaDerTot) - 10);
+            }
+        }
+
+        // Función interna para dibujar el bastón de mira
+        function _dibujarMiraGrafica(ctx, x, ySuelo, yInst, lectura) {
+            const w = 10; // Ancho de mira
+            
+            // Fondo blanco de la mira
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(x - w/2, yInst, w, ySuelo - yInst);
+            
+            // Borde oscuro
+            ctx.strokeStyle = "#1e293b";
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(x - w/2, yInst, w, ySuelo - yInst);
+
+            // Tramos rojos de la mira
+            ctx.fillStyle = "#ef4444";
+            for(let py = yInst; py < ySuelo; py += 15) {
+                if(py + 7.5 < ySuelo) ctx.fillRect(x - w/2, py, w, 7.5);
+            }
+
+            // Etiqueta de Lectura girada (para que no estorbe visualmente)
+            ctx.save();
+            ctx.translate(x - 12, (yInst + ySuelo) / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillStyle = "#0f172a";
+            ctx.font = "900 13px monospace";
+            ctx.textAlign = "center";
+            ctx.fillText(lectura.toFixed(3), 0, 0);
+            ctx.restore();
+        }
     </script>
 </body>
 </html>
