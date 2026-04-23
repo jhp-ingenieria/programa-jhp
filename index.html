@@ -132,7 +132,7 @@
             <div class="space-y-5">
                 <input type="text" id="userInput" placeholder="Usuario" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-yellow-500/20 font-bold text-center">
                 <input type="password" id="passInput" placeholder="Contraseña" class="w-full p-5 bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-yellow-500/20 font-bold text-center">
-                <p id="errorMsg" class="text-red-500 text-xs font-bold text-center hidden uppercase"></p>
+                <p id="errorMsg" class="text-red-500 text-[10px] font-black text-center hidden uppercase tracking-widest"></p>
                 <button id="btnDesbloquear" onclick="validarLogin()" class="w-full bg-slate-900 text-white py-6 rounded-2xl font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95">DESBLOQUEAR</button>
                 <button onclick="document.getElementById('loginModal').style.display='none'" class="w-full text-slate-400 font-bold py-3 uppercase text-[10px] tracking-widest hover:text-slate-600 transition-colors">Volver a Inicio</button>
             </div>
@@ -140,8 +140,6 @@
     </div>
 
     <script>
-        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRiDyszMC3csF855J9N0bvz8OT5OkPxqN7sIIFVzzcMzg2b568u_D3I9pm7Jc2sVcC7UCjC93UZUvip/pub?gid=0&single=true&output=csv";
-
         function abrirLogin() { 
             document.getElementById('loginModal').style.display = 'flex'; 
             document.getElementById('errorMsg').classList.add('hidden');
@@ -152,9 +150,10 @@
             const pInput = document.getElementById('passInput').value.trim();
             const errorMsg = document.getElementById('errorMsg');
             const btn = document.getElementById('btnDesbloquear');
+            const OFFLINE_KEY = "jhp_access_token"; // Clave para la memoria local
 
             if (!uInput || !pInput) {
-                errorMsg.innerText = "Falta usuario o contraseña";
+                errorMsg.innerText = "Faltan datos de acceso";
                 errorMsg.classList.remove('hidden');
                 return;
             }
@@ -163,19 +162,40 @@
             btn.disabled = true;
 
             try {
-                const response = await fetch(CSV_URL);
-                if (!response.ok) throw new Error("Error en la conexión");
-                const data = await response.text();
+                // TU ENLACE ESPEJO (Publicado como CSV)
+                const URL_LOGIN_ESPEJO = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTI4aU3qyzOM46_tf_pIff3b9_5lXE4jS9YOO3g__ezhyDsn23WXHpueYUSfj7xxvuUW2BNK3Eq9w9N/pub?gid=2027241677&single=true&output=csv";
                 
-                const rows = data.split('\n').map(row => row.split(/,|;/));
+                // INTENTO ONLINE
+                const response = await fetch(URL_LOGIN_ESPEJO);
+                const textData = await response.text();
+                const filas = textData.split(/\r?\n/).map(f => f.split(/[,;]/));
+                
                 let accesoConcedido = false;
-                
-                for (let i = 1; i < rows.length; i++) {
-                    if(rows[i].length >= 2) {
-                        const userDB = rows[i][0].trim().toLowerCase();
-                        const passDB = rows[i][1].trim();
-                        if (uInput === userDB && pInput === passDB) {
-                            accesoConcedido = true;
+                let mensajeError = "Credenciales Incorrectas";
+
+                for (let i = 1; i < filas.length; i++) {
+                    if (filas[i].length >= 3) {
+                        let uDB = (filas[i][0] || "").toString().replace(/"/g, "").trim().toLowerCase();
+                        let pDB = (filas[i][1] || "").toString().replace(/"/g, "").trim();
+                        let sDB = (filas[i][2] || "").toString().replace(/"/g, "").trim().toUpperCase();
+
+                        if (uDB === uInput && pDB === pInput) {
+                            if (sDB === "ACTIVO" || sDB === "TRIAL") {
+                                accesoConcedido = true;
+                                
+                                // ✅ ÉXITO ONLINE: GUARDAMOS TICKET PARA LOS PRÓXIMOS 3 DÍAS
+                                const ticket = {
+                                    usuario: uDB,
+                                    password: pDB,
+                                    expiracion: Date.now() + (3 * 24 * 60 * 60 * 1000) // 72 horas en milisegundos
+                                };
+                                localStorage.setItem(OFFLINE_KEY, JSON.stringify(ticket));
+
+                            } else if (sDB === "EXPIRED") {
+                                mensajeError = "SU SUSCRIPCIÓN HA EXPIRADO";
+                            } else if (sDB === "BLOQUEADO") {
+                                mensajeError = "SU CUENTA HA SIDO BLOQUEADA";
+                            }
                             break;
                         }
                     }
@@ -183,14 +203,41 @@
 
                 if (accesoConcedido) {
                     sessionStorage.setItem('sesion_jhp_activa', uInput);
-                    // AQUÍ ESTÁ EL REDIRECCIONAMIENTO DIRECTO AL MÓDULO DE EDIFICACIONES
                     window.location.href = 'edificaciones.html';
                 } else {
-                    errorMsg.innerText = "Credenciales Incorrectas";
+                    errorMsg.innerText = mensajeError;
                     errorMsg.classList.remove('hidden');
                 }
+
             } catch (error) {
-                errorMsg.innerText = "Error: Verifica tu conexión a internet.";
+                // 🚀 MODO OFFLINE: EL FETCH FALLÓ POR FALTA DE INTERNET
+                console.warn("Sin señal. Buscando ticket offline...");
+                
+                const ticketGuardado = localStorage.getItem(OFFLINE_KEY);
+
+                if (ticketGuardado) {
+                    const ticket = JSON.parse(ticketGuardado);
+                    const tiempoAhora = Date.now();
+
+                    // Verificamos si las credenciales coinciden con las guardadas en este equipo
+                    if (uInput === ticket.usuario && pInput === ticket.password) {
+                        
+                        // Verificamos si el ticket aún está dentro de las 72 horas
+                        if (tiempoAhora < ticket.expiracion) {
+                            sessionStorage.setItem('sesion_jhp_activa', uInput);
+                            // Simula acceso exitoso sin red
+                            window.location.href = 'edificaciones.html';
+                            return; 
+                        } else {
+                            errorMsg.innerText = "ACCESO OFFLINE EXPIRADO. CONÉCTESE A INTERNET.";
+                        }
+                    } else {
+                        errorMsg.innerText = "CREDENCIALES INCORRECTAS EN MODO OFFLINE";
+                    }
+                } else {
+                    errorMsg.innerText = "SIN SEÑAL Y SIN ACCESO PREVIO EN ESTE EQUIPO.";
+                }
+                
                 errorMsg.classList.remove('hidden');
             } finally {
                 btn.innerText = "DESBLOQUEAR";
